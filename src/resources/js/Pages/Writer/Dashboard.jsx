@@ -46,7 +46,8 @@ import {
     History,
     Menu as MenuIcon,
     CreateNewFolder,
-    CheckCircle
+    CheckCircle,
+    AutoStories
 } from '@mui/icons-material';
 import { router } from '@inertiajs/react';
 import DashboardSidebar from '@/Components/DashboardSidebar';
@@ -222,21 +223,54 @@ export default function WriterDashboard({
             
             <Box sx={{ display: 'flex', minHeight: '100vh' }}>
                 {/* Top App Bar */}
-                <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-                    <Toolbar>
-                        {isMobile && (
-                            <IconButton
-                                color="inherit"
-                                edge="start"
-                                onClick={() => setSidebarOpen(!sidebarOpen)}
-                                sx={{ mr: 2 }}
+                <AppBar position="fixed" sx={{ 
+                    zIndex: (theme) => theme.zIndex.drawer + 1,
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                }}>
+                    <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            {isMobile && (
+                                <IconButton
+                                    color="inherit"
+                                    edge="start"
+                                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                                    sx={{ mr: 2 }}
+                                >
+                                    <MenuIcon />
+                                </IconButton>
+                            )}
+                            <AutoStories sx={{ fontSize: 32, color: 'white' }} />
+                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white' }}>
+                                ✍️ Writer Dashboard
+                            </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Button
+                                component={Link}
+                                href="/"
+                                variant="outlined"
+                                size="small"
+                                sx={{ color: 'white', borderColor: 'white' }}
                             >
-                                <MenuIcon />
-                            </IconButton>
-                        )}
-                        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                            ✍️ Writer Dashboard
-                        </Typography>
+                                Home
+                            </Button>
+                            <Button
+                                component={Link}
+                                href="/profile"
+                                variant="contained"
+                                size="small"
+                                sx={{
+                                    backgroundColor: 'white',
+                                    color: 'primary.main',
+                                    '&:hover': {
+                                        backgroundColor: 'grey.100',
+                                    }
+                                }}
+                            >
+                                Profile
+                            </Button>
+                        </Box>
                     </Toolbar>
                 </AppBar>
 
@@ -261,12 +295,23 @@ export default function WriterDashboard({
                 >
                     <Container maxWidth="lg">
                         {/* Stats Cards */}
-                        <Grid container spacing={2} sx={{ mb: 4 }}>
+                        <Grid container spacing={3} sx={{ mb: 4 }}>
                             <Grid item xs={12} sm={6} md={3}>
-                                <Card>
-                                    <CardContent sx={{ textAlign: 'center' }}>
-                                        <Article sx={{ fontSize: 32, color: 'primary.main', mb: 1 }} />
-                                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                                <Card sx={{ 
+                                    height: '100%', 
+                                    boxShadow: '0 10px 40px rgba(0,0,0,0.1)', 
+                                    transition: 'all 0.3s ease',
+                                    background: 'rgba(255, 255, 255, 0.95)',
+                                    backdropFilter: 'blur(10px)',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    '&:hover': { 
+                                        transform: 'translateY(-8px) scale(1.02)',
+                                        boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+                                    }
+                                }}>
+                                    <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                                        <Article sx={{ fontSize: 40, color: 'primary.main', mb: 2 }} />
+                                        <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
                                             {stats.draft}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
@@ -276,10 +321,21 @@ export default function WriterDashboard({
                                 </Card>
                             </Grid>
                             <Grid item xs={12} sm={6} md={3}>
-                                <Card>
-                                    <CardContent sx={{ textAlign: 'center' }}>
-                                        <Send sx={{ fontSize: 32, color: 'warning.main', mb: 1 }} />
-                                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                                <Card sx={{ 
+                                    height: '100%', 
+                                    boxShadow: '0 10px 40px rgba(0,0,0,0.1)', 
+                                    transition: 'all 0.3s ease',
+                                    background: 'rgba(255, 255, 255, 0.95)',
+                                    backdropFilter: 'blur(10px)',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    '&:hover': { 
+                                        transform: 'translateY(-8px) scale(1.02)',
+                                        boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+                                    }
+                                }}>
+                                    <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                                        <Send sx={{ fontSize: 40, color: 'warning.main', mb: 2 }} />
+                                        <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
                                             {stats.submitted}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
@@ -289,10 +345,21 @@ export default function WriterDashboard({
                                 </Card>
                             </Grid>
                             <Grid item xs={12} sm={6} md={3}>
-                                <Card>
-                                    <CardContent sx={{ textAlign: 'center' }}>
-                                        <Edit sx={{ fontSize: 32, color: 'error.main', mb: 1 }} />
-                                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                                <Card sx={{ 
+                                    height: '100%', 
+                                    boxShadow: '0 10px 40px rgba(0,0,0,0.1)', 
+                                    transition: 'all 0.3s ease',
+                                    background: 'rgba(255, 255, 255, 0.95)',
+                                    backdropFilter: 'blur(10px)',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    '&:hover': { 
+                                        transform: 'translateY(-8px) scale(1.02)',
+                                        boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+                                    }
+                                }}>
+                                    <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                                        <Edit sx={{ fontSize: 40, color: 'error.main', mb: 2 }} />
+                                        <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
                                             {stats.revision}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
@@ -302,10 +369,21 @@ export default function WriterDashboard({
                                 </Card>
                             </Grid>
                             <Grid item xs={12} sm={6} md={3}>
-                                <Card>
-                                    <CardContent sx={{ textAlign: 'center' }}>
-                                        <CheckCircle sx={{ fontSize: 32, color: 'success.main', mb: 1 }} />
-                                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                                <Card sx={{ 
+                                    height: '100%', 
+                                    boxShadow: '0 10px 40px rgba(0,0,0,0.1)', 
+                                    transition: 'all 0.3s ease',
+                                    background: 'rgba(255, 255, 255, 0.95)',
+                                    backdropFilter: 'blur(10px)',
+                                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                                    '&:hover': { 
+                                        transform: 'translateY(-8px) scale(1.02)',
+                                        boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+                                    }
+                                }}>
+                                    <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                                        <CheckCircle sx={{ fontSize: 40, color: 'success.main', mb: 2 }} />
+                                        <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
                                             {stats.published}
                                         </Typography>
                                         <Typography variant="body2" color="text.secondary">
@@ -317,7 +395,18 @@ export default function WriterDashboard({
                         </Grid>
 
                         {/* Search and Filter */}
-                        <Paper sx={{ p: 3, mb: 4 }}>
+                        <Paper sx={{ 
+                            p: 3, 
+                            mb: 4,
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': { 
+                                boxShadow: '0 15px 50px rgba(0,0,0,0.12)'
+                            }
+                        }}>
                             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                                 <TextField
                                     placeholder="Search articles..."
@@ -350,6 +439,17 @@ export default function WriterDashboard({
                                     variant="contained"
                                     startIcon={<Add />}
                                     onClick={() => router.get('/writer/articles/create')}
+                                    sx={{
+                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                        '&:hover': {
+                                            background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                                            transform: 'translateY(-2px)',
+                                            boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)'
+                                        },
+                                        transition: 'all 0.3s ease',
+                                        borderRadius: 2,
+                                        px: 3
+                                    }}
                                 >
                                     Create Article
                                 </Button>
@@ -361,7 +461,20 @@ export default function WriterDashboard({
                             {filteredArticles.length > 0 ? (
                                 filteredArticles.map((article) => (
                                     <Grid item xs={12} md={6} lg={4} key={article.id}>
-                                        <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                                        <Card sx={{ 
+                                            height: '100%', 
+                                            display: 'flex', 
+                                            flexDirection: 'column',
+                                            boxShadow: '0 10px 40px rgba(0,0,0,0.1)', 
+                                            transition: 'all 0.3s ease',
+                                            background: 'rgba(255, 255, 255, 0.95)',
+                                            backdropFilter: 'blur(10px)',
+                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                            '&:hover': { 
+                                                transform: 'translateY(-8px) scale(1.02)',
+                                                boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+                                            }
+                                        }}>
                                             <CardContent sx={{ flexGrow: 1, pb: 1 }}>
                                                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                                                     <Box sx={{ flex: 1 }}>
@@ -412,15 +525,35 @@ export default function WriterDashboard({
                                 ))
                             ) : (
                                 <Grid item xs={12}>
-                                    <Card>
-                                        <CardContent sx={{ textAlign: 'center', py: 4 }}>
-                                            <Typography color="text.secondary" sx={{ mb: 2 }}>
+                                    <Card sx={{ 
+                                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                                        backdropFilter: 'blur(10px)',
+                                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                                        boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                                        transition: 'all 0.3s ease',
+                                        '&:hover': { 
+                                            boxShadow: '0 15px 50px rgba(0,0,0,0.12)'
+                                        }
+                                    }}>
+                                        <CardContent sx={{ textAlign: 'center', py: 6 }}>
+                                            <Typography color="text.secondary" sx={{ mb: 3, fontSize: '1.1rem' }}>
                                                 No articles found
                                             </Typography>
                                             <Button
                                                 variant="contained"
                                                 startIcon={<Add />}
                                                 onClick={() => router.get('/writer/articles/create')}
+                                                sx={{
+                                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                    '&:hover': {
+                                                        background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                                                        transform: 'translateY(-2px)',
+                                                        boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)'
+                                                    },
+                                                    transition: 'all 0.3s ease',
+                                                    borderRadius: 2,
+                                                    px: 3
+                                                }}
                                             >
                                                 Create Your First Article
                                             </Button>
@@ -481,7 +614,14 @@ export default function WriterDashboard({
                         position: 'fixed',
                         bottom: 24,
                         right: 24,
-                        zIndex: 1000
+                        zIndex: 1000,
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        '&:hover': {
+                            background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                            transform: 'translateY(-2px)',
+                            boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)'
+                        },
+                        transition: 'all 0.3s ease'
                     }}
                 >
                     <Add />

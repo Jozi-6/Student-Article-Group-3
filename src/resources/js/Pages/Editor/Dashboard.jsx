@@ -42,7 +42,8 @@ import {
     Article,
     Pending,
     AssignmentTurnedIn,
-    LibraryBooks
+    LibraryBooks,
+    AutoStories
 } from '@mui/icons-material';
 import { router } from '@inertiajs/react';
 
@@ -265,19 +266,52 @@ export default function EditorDashboard({
             <Head title="Editor Dashboard" />
             <Box sx={{ display: 'flex', height: '100vh' }}>
                 {/* Header */}
-                <AppBar position="fixed" sx={{ zIndex: theme.zIndex.drawer + 1 }}>
-                    <Toolbar>
-                        <IconButton
-                            color="inherit"
-                            onClick={() => setSidebarOpen(true)}
-                            sx={{ mr: 2, display: { md: 'none' } }}
-                        >
-                            <MenuIcon />
-                        </IconButton>
-                        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                            Editor Dashboard
-                        </Typography>
-                        <Avatar sx={{ ml: 2 }}>E</Avatar>
+                <AppBar position="fixed" sx={{ 
+                    zIndex: theme.zIndex.drawer + 1,
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                }}>
+                    <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <IconButton
+                                color="inherit"
+                                onClick={() => setSidebarOpen(true)}
+                                sx={{ mr: 2, display: { md: 'none' } }}
+                            >
+                                <MenuIcon />
+                            </IconButton>
+                            <AutoStories sx={{ fontSize: 32, color: 'white' }} />
+                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white' }}>
+                                👁️ Editor Dashboard
+                            </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                            <Button
+                                component="button"
+                                onClick={() => router.get('/')}
+                                variant="outlined"
+                                size="small"
+                                sx={{ color: 'white', borderColor: 'white' }}
+                            >
+                                Home
+                            </Button>
+                            <Button
+                                component="button"
+                                onClick={() => router.get('/profile')}
+                                variant="contained"
+                                size="small"
+                                sx={{
+                                    backgroundColor: 'white',
+                                    color: 'primary.main',
+                                    '&:hover': {
+                                        backgroundColor: 'grey.100',
+                                    }
+                                }}
+                            >
+                                Profile
+                            </Button>
+                            <Avatar sx={{ ml: 2, bgcolor: 'white', color: 'primary.main' }}>E</Avatar>
+                        </Box>
                     </Toolbar>
                 </AppBar>
 

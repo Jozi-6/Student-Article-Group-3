@@ -108,6 +108,9 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                     minHeight: '100vh',
                     position: 'relative',
                     overflow: 'hidden',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     '&::before': {
                         content: '""',
                         position: 'absolute',
@@ -120,11 +123,19 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                     }
                 }}
             >
-                <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1 }}>
+                <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
                     {/* Hero Content */}
-                    <Box sx={{ py: 8, textAlign: 'center' }}>
+                    <Box sx={{ 
+                        py: 8, 
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        minHeight: 'calc(100vh - 64px)'
+                    }}>
                         <Fade in timeout={1000}>
-                            <Box>
+                            <Box sx={{ maxWidth: '900px', mx: 'auto' }}>
                                 <Typography
                                     variant="h2"
                                     component="h1"
@@ -132,10 +143,12 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                         fontWeight: 'bold',
                                         mb: 3,
                                         color: 'white',
-                                        fontSize: { xs: '2.5rem', md: '3.5rem' }
+                                        fontSize: { xs: '2.5rem', md: '3.5rem' },
+                                        lineHeight: 1.2,
+                                        textAlign: 'center'
                                     }}
                                 >
-                                    Share Your Knowledge with the World
+                                    Share Your Knowledge with World
                                 </Typography>
                                 
                                 <Typography
@@ -143,16 +156,23 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                     sx={{
                                         mb: 6,
                                         color: 'rgba(255, 255, 255, 0.9)',
-                                        maxWidth: '800px',
+                                        maxWidth: '700px',
                                         mx: 'auto',
-                                        lineHeight: 1.6
+                                        lineHeight: 1.6,
+                                        textAlign: 'center'
                                     }}
                                 >
                                     Join our collaborative platform where writers create, editors refine, and readers engage with quality content.
                                 </Typography>
 
                                 {!auth.user && (
-                                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        gap: 2, 
+                                        justifyContent: 'center', 
+                                        flexWrap: 'wrap',
+                                        alignItems: 'center'
+                                    }}>
                                         <Button
                                             component={Link}
                                             href={route('register')}
@@ -202,23 +222,31 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                     </Box>
 
                     {/* Role Selection Section */}
-                    <Box sx={{ py: 8 }}>
+                    <Box sx={{ 
+                        py: 8, 
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
                         <Slide in timeout={1200} direction="up">
-                            <Typography
-                                variant="h4"
-                                sx={{ 
-                                    fontWeight: 'bold', 
-                                    mb: 6, 
-                                    textAlign: 'center', 
-                                    color: 'white',
-                                    fontSize: { xs: '2rem', md: '2.5rem' }
-                                }}
-                            >
-                                Choose Your Role
-                            </Typography>
+                            <Box sx={{ textAlign: 'center', maxWidth: '800px', mx: 'auto', mb: 6 }}>
+                                <Typography
+                                    variant="h4"
+                                    sx={{ 
+                                        fontWeight: 'bold', 
+                                        mb: 3, 
+                                        textAlign: 'center', 
+                                        color: 'white',
+                                        fontSize: { xs: '2rem', md: '2.5rem' }
+                                    }}
+                                >
+                                    Choose Your Role
+                                </Typography>
+                            </Box>
                         </Slide>
 
-                        <Grid container spacing={4}>
+                        <Grid container spacing={4} justifyContent="center" alignItems="stretch">
                             {/* Writer Dashboard */}
                             <Grid item xs={12} md={6} lg={4}>
                                 <Slide in timeout={1400} direction="up">
@@ -557,7 +585,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                             </Paper>
 
                                             <Typography variant="body2" sx={{ mb: 3, color: 'text.secondary', lineHeight: 1.6 }}>
-                                                Discover and read published articles, share your thoughts through comments, like content, and engage with the learning community.
+                                                Discover and read published articles, share your thoughts through comments, like content, and engage with learning community.
                                             </Typography>
 
                                             <Button
@@ -587,112 +615,129 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                     </Box>
 
                     {/* Features Section */}
-                    <Box sx={{ py: 8, textAlign: 'center' }}>
+                    <Box sx={{ 
+                        py: 8, 
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
                         <Slide in timeout={2000} direction="up">
-                            <Box>
+                            <Box sx={{ maxWidth: '800px', mx: 'auto', mb: 6 }}>
                                 <Typography
                                     variant="h4"
                                     sx={{ 
                                         fontWeight: 'bold', 
-                                        mb: 6, 
+                                        mb: 3, 
+                                        textAlign: 'center',
                                         color: 'white',
                                         fontSize: { xs: '2rem', md: '2.5rem' }
                                     }}
                                 >
                                     Why Choose Our Platform?
                                 </Typography>
-
-                                <Grid container spacing={4}>
-                                    <Grid item xs={12} md={4}>
-                                        <Box sx={{ textAlign: 'center', color: 'white' }}>
-                                            <Box sx={{
-                                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                                borderRadius: '50%',
-                                                width: 80,
-                                                height: 80,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                mx: 'auto',
-                                                mb: 2
-                                            }}>
-                                                <Lightbulb sx={{ fontSize: 40 }} />
-                                            </Box>
-                                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-                                                Knowledge Sharing
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                                Share your expertise and learn from others in a collaborative environment
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-
-                                    <Grid item xs={12} md={4}>
-                                        <Box sx={{ textAlign: 'center', color: 'white' }}>
-                                            <Box sx={{
-                                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                                borderRadius: '50%',
-                                                width: 80,
-                                                height: 80,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                mx: 'auto',
-                                                mb: 2
-                                            }}>
-                                                <Psychology sx={{ fontSize: 40 }} />
-                                            </Box>
-                                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-                                                Quality Content
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                                Professional editorial process ensures high-quality, accurate content
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-
-                                    <Grid item xs={12} md={4}>
-                                        <Box sx={{ textAlign: 'center', color: 'white' }}>
-                                            <Box sx={{
-                                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                                borderRadius: '50%',
-                                                width: 80,
-                                                height: 80,
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                mx: 'auto',
-                                                mb: 2
-                                            }}>
-                                                <GroupIcon sx={{ fontSize: 40 }} />
-                                            </Box>
-                                            <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
-                                                Community Driven
-                                            </Typography>
-                                            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                                Engage with a community of passionate writers, editors, and readers
-                                            </Typography>
-                                        </Box>
-                                    </Grid>
-                                </Grid>
                             </Box>
                         </Slide>
+
+                        <Grid container spacing={4} justifyContent="center" alignItems="stretch">
+                            <Grid item xs={12} md={4}>
+                                <Box sx={{ textAlign: 'center', color: 'white', height: '100%' }}>
+                                    <Box sx={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                        borderRadius: '50%',
+                                        width: 80,
+                                        height: 80,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        mx: 'auto',
+                                        mb: 2
+                                    }}>
+                                        <Lightbulb sx={{ fontSize: 40 }} />
+                                    </Box>
+                                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+                                        Knowledge Sharing
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                                        Share your expertise and learn from others in a collaborative environment
+                                    </Typography>
+                                </Box>
+                            </Grid>
+
+                            <Grid item xs={12} md={4}>
+                                <Box sx={{ textAlign: 'center', color: 'white', height: '100%' }}>
+                                    <Box sx={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                        borderRadius: '50%',
+                                        width: 80,
+                                        height: 80,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        mx: 'auto',
+                                        mb: 2
+                                    }}>
+                                        <Psychology sx={{ fontSize: 40 }} />
+                                    </Box>
+                                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+                                        Quality Content
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                                        Professional editorial process ensures high-quality, accurate content
+                                    </Typography>
+                                </Box>
+                            </Grid>
+
+                            <Grid item xs={12} md={4}>
+                                <Box sx={{ textAlign: 'center', color: 'white', height: '100%' }}>
+                                    <Box sx={{
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                        borderRadius: '50%',
+                                        width: 80,
+                                        height: 80,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        mx: 'auto',
+                                        mb: 2
+                                    }}>
+                                        <GroupIcon sx={{ fontSize: 40 }} />
+                                    </Box>
+                                    <Typography variant="h6" sx={{ mb: 2, fontWeight: 'bold' }}>
+                                        Community Driven
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                                        Engage with a community of passionate writers, editors, and readers
+                                    </Typography>
+                                </Box>
+                            </Grid>
+                        </Grid>
                     </Box>
 
                     {/* Call to Action */}
-                    <Box sx={{ py: 8, textAlign: 'center' }}>
+                    <Box sx={{ 
+                        py: 8, 
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
                         <Slide in timeout={2200} direction="up">
                             <Paper sx={{ 
                                 p: 6, 
                                 background: 'rgba(255, 255, 255, 0.1)',
                                 backdropFilter: 'blur(10px)',
                                 border: '1px solid rgba(255, 255, 255, 0.2)',
-                                borderRadius: 4
+                                borderRadius: 4,
+                                maxWidth: '700px',
+                                mx: 'auto'
                             }}>
-                                <Typography variant="h4" sx={{ mb: 3, color: 'white', fontWeight: 'bold' }}>
+                                <Typography variant="h4" sx={{ mb: 3, color: 'white', fontWeight: 'bold', textAlign: 'center' }}>
                                     Ready to Get Started?
                                 </Typography>
-                                <Typography variant="body1" sx={{ mb: 4, color: 'rgba(255, 255, 255, 0.9)', maxWidth: '600px', mx: 'auto' }}>
+                                <Typography variant="body1" sx={{ mb: 4, color: 'rgba(255, 255, 255, 0.9)', textAlign: 'center' }}>
                                     Join our community of writers, editors, and readers today. Start creating, reviewing, or exploring quality content.
                                 </Typography>
                                 <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>

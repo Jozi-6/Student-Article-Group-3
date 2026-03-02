@@ -36,7 +36,8 @@ import {
     Favorite,
     FavoriteBorder,
     MoreVert,
-    Send
+    Send,
+    AutoStories
 } from '@mui/icons-material';
 import { router } from '@inertiajs/react';
 import DashboardSidebar from '@/Components/DashboardSidebar';
@@ -171,21 +172,71 @@ export default function StudentDashboard() {
             
             <Box sx={{ display: 'flex', minHeight: '100vh' }}>
                 {/* Top App Bar */}
-                <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-                    <Toolbar>
-                        {isMobile && (
-                            <IconButton
-                                color="inherit"
-                                edge="start"
-                                onClick={() => setSidebarOpen(!sidebarOpen)}
-                                sx={{ mr: 2 }}
+                <AppBar position="fixed" sx={{ 
+                    zIndex: (theme) => theme.zIndex.drawer + 1,
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                }}>
+                    <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            {isMobile && (
+                                <IconButton
+                                    color="inherit"
+                                    edge="start"
+                                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                                    sx={{ mr: 2 }}
+                                >
+                                    <MenuIcon />
+                                </IconButton>
+                            )}
+                            <AutoStories sx={{ fontSize: 32, color: 'white' }} />
+                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white' }}>
+                                📚 Reader Dashboard
+                            </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Button
+                                component="button"
+                                onClick={() => router.get('/')}
+                                variant="outlined"
+                                size="small"
+                                sx={{ color: 'white', borderColor: 'white' }}
                             >
-                                <MenuIcon />
-                            </IconButton>
-                        )}
-                        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-                            📚 Reader Dashboard
-                        </Typography>
+                                Home
+                            </Button>
+                            <Button
+                                component="button"
+                                onClick={() => router.get('/profile')}
+                                variant="contained"
+                                size="small"
+                                sx={{
+                                    backgroundColor: 'white',
+                                    color: 'primary.main',
+                                    '&:hover': {
+                                        backgroundColor: 'grey.100',
+                                    }
+                                }}
+                            >
+                                Profile
+                            </Button>
+                            <Button
+                                component="button"
+                                onClick={() => {
+                                    console.log('Logout clicked');
+                                    router.post(route('logout'));
+                                }}
+                                variant="text"
+                                size="small"
+                                sx={{ 
+                                    color: 'white',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    }
+                                }}
+                            >
+                                Logout
+                            </Button>
+                        </Box>
                     </Toolbar>
                 </AppBar>
 
