@@ -8,22 +8,22 @@ import {
     CardHeader,
     Typography,
     Button,
-    Chip,
     IconButton,
     TextField,
     Grid,
     Paper,
-    Divider,
     AppBar,
     Toolbar,
     useMediaQuery,
     useTheme,
-    List,
-    ListItem,
-    ListItemIcon,
-    ListItemText,
     Avatar,
-    TextareaAutosize
+    CircularProgress,
+    Modal,
+    Backdrop,
+    Menu,
+    MenuItem,
+    ListItemIcon,
+    ListItemText
 } from '@mui/material';
 import {
     Search,
@@ -36,11 +36,13 @@ import {
     Favorite,
     FavoriteBorder,
     MoreVert,
-    Send,
-    AutoStories
+    AutoStories,
+    Person,
+    ExitToApp
 } from '@mui/icons-material';
 import { router } from '@inertiajs/react';
-import DashboardSidebar from '@/Components/DashboardSidebar';
+import DashboardSidebar from '../../Components/DashboardSidebar';
+import Comments from './Comments';
 
 export default function StudentDashboard() {
     const theme = useTheme();
@@ -51,11 +53,18 @@ export default function StudentDashboard() {
     const [filter, setFilter] = useState('all');
     const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
     const [likedArticles, setLikedArticles] = useState([]);
-    const [articleComments, setArticleComments] = useState({});
-    const [commentText, setCommentText] = useState('');
+    const [totalComments, setTotalComments] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [commentsModalOpen, setCommentsModalOpen] = useState(false);
+    const [selectedArticle, setSelectedArticle] = useState(null);
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+    const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
 
     useEffect(() => {
-        const mockArticles = [
+        try {
+            setLoading(true);
+            const mockArticles = [
             {
                 id: 1,
                 title: 'The Future of Web Development',
@@ -102,17 +111,45 @@ export default function StudentDashboard() {
             }
         ];
         setArticles(mockArticles);
-        
-        // Initialize comments
-        const comments = {};
-        mockArticles.forEach(article => {
-            comments[article.id] = [
-                { id: 1, author: 'Reader 1', text: 'Great article!', date: '2024-01-17' },
-                { id: 2, author: 'Reader 2', text: 'Very helpful, thanks for sharing', date: '2024-01-16' }
-            ];
-        });
-        setArticleComments(comments);
+            setLoading(false);
+        } catch (err) {
+            console.error('Error loading articles:', err);
+            setError('Failed to load articles');
+            setLoading(false);
+        }
     }, []);
+
+    // Real-time fetching of articles and comments
+    useEffect(() => {
+        const fetchLatestData = async () => {
+            try {
+                // Fetch latest articles
+                const articlesResponse = await fetch('/api/latest-articles');
+                if (articlesResponse.ok) {
+                    const articlesData = await articlesResponse.json();
+                    setArticles(articlesData);
+                }
+
+                // Fetch comments for all articles if modal is open
+                if (selectedArticle) {
+                    const commentsResponse = await fetch(`/api/articles/${selectedArticle.id}/comments`);
+                    if (commentsResponse.ok) {
+                        const commentsData = await commentsResponse.json();
+                        // Update comments in localStorage
+                        const storageKey = `article_comments_${selectedArticle.id}`;
+                        localStorage.setItem(storageKey, JSON.stringify(commentsData));
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching latest data:', err);
+            }
+        };
+
+        // Set up polling interval (every 30 seconds)
+        const interval = setInterval(fetchLatestData, 30000);
+
+        return () => clearInterval(interval); // Cleanup on unmount
+    }, [selectedArticle]);
 
     const toggleLike = (articleId) => {
         if (likedArticles.includes(articleId)) {
@@ -122,20 +159,36 @@ export default function StudentDashboard() {
         }
     };
 
-    const handleAddComment = (articleId) => {
-        if (commentText.trim()) {
-            const newComment = {
-                id: (articleComments[articleId]?.length || 0) + 1,
-                author: 'You',
-                text: commentText,
-                date: new Date().toLocaleDateString()
-            };
-            setArticleComments({
-                ...articleComments,
-                [articleId]: [...(articleComments[articleId] || []), newComment]
-            });
-            setCommentText('');
-        }
+    const handleCommentsClick = (article) => {
+        setSelectedArticle(article);
+        setCommentsModalOpen(true);
+    };
+
+    const handleCloseCommentsModal = () => {
+        setCommentsModalOpen(false);
+        setSelectedArticle(null);
+    };
+
+    const toggleSidebar = () => {
+        setSidebarCollapsed(!sidebarCollapsed);
+    };
+
+    const handleProfileMenuOpen = (event) => {
+        setProfileMenuAnchor(event.currentTarget);
+    };
+
+    const handleProfileMenuClose = () => {
+        setProfileMenuAnchor(null);
+    };
+
+    const handleSeeProfile = () => {
+        handleProfileMenuClose();
+        router.get('/profile');
+    };
+
+    const handleLogout = () => {
+        handleProfileMenuClose();
+        router.post('/logout');
     };
 
     const filteredArticles = articles.filter(article => {
@@ -161,72 +214,90 @@ export default function StudentDashboard() {
         {
             label: 'My Comments',
             icon: <ChatBubble />,
-            href: '#comments',
+            href: '/student/my-comments',
             active: filter === 'comments'
         }
     ];
+
+    if (error) {
+        return (
+            <>
+                <Head title="Student Dashboard - Error" />
+                <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    minHeight: '100vh',
+                    flexDirection: 'column',
+                    gap: 2
+                }}>
+                    <Typography variant="h6" color="error">
+                        ⚠️ Error Loading Dashboard
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        {error}
+                    </Typography>
+                    <Button 
+                        variant="contained" 
+                        onClick={() => window.location.reload()}
+                        sx={{ mt: 2 }}
+                    >
+                        Retry
+                    </Button>
+                </Box>
+            </>
+        );
+    }
+
+    if (loading) {
+        return (
+            <>
+                <Head title="Loading Student Dashboard" />
+                <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'center', 
+                    alignItems: 'center', 
+                    minHeight: '100vh',
+                    flexDirection: 'column',
+                    gap: 2
+                }}>
+                    <CircularProgress size={40} />
+                    <Typography variant="body2" color="text.secondary">
+                        Loading Student Dashboard...
+                    </Typography>
+                </Box>
+            </>
+        );
+    }
 
     return (
         <>
             <Head title="Student/Reader Dashboard" />
             
-            <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-                {/* Top App Bar */}
-                <AppBar position="fixed" sx={{ 
+            <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', overflowX: 'hidden' }}>
+                {/* Header */}
+                <AppBar position="static" sx={{ 
                     zIndex: (theme) => theme.zIndex.drawer + 1,
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                     boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
                 }}>
                     <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            {isMobile && (
-                                <IconButton
-                                    color="inherit"
-                                    edge="start"
-                                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                                    sx={{ mr: 2 }}
-                                >
-                                    <MenuIcon />
-                                </IconButton>
-                            )}
+                            <IconButton
+                                color="inherit"
+                                onClick={() => setSidebarOpen(!sidebarOpen)}
+                                sx={{ mr: 2 }}
+                            >
+                                <MenuIcon />
+                            </IconButton>
                             <AutoStories sx={{ fontSize: 32, color: 'white' }} />
                             <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white' }}>
-                                📚 Reader Dashboard
+                                Student Dashboard
                             </Typography>
                         </Box>
-                        <Box sx={{ display: 'flex', gap: 2 }}>
-                            <Button
-                                component="button"
-                                onClick={() => router.get('/')}
-                                variant="outlined"
-                                size="small"
-                                sx={{ color: 'white', borderColor: 'white' }}
-                            >
-                                Home
-                            </Button>
-                            <Button
-                                component="button"
-                                onClick={() => router.get('/profile')}
-                                variant="contained"
-                                size="small"
-                                sx={{
-                                    backgroundColor: 'white',
-                                    color: 'primary.main',
-                                    '&:hover': {
-                                        backgroundColor: 'grey.100',
-                                    }
-                                }}
-                            >
-                                Profile
-                            </Button>
-                            <Button
-                                component="button"
-                                onClick={() => {
-                                    console.log('Logout clicked');
-                                    router.post(route('logout'));
-                                }}
-                                variant="text"
-                                size="small"
+                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                            <IconButton
+                                onClick={handleProfileMenuOpen}
                                 sx={{ 
                                     color: 'white',
                                     '&:hover': {
@@ -234,97 +305,127 @@ export default function StudentDashboard() {
                                     }
                                 }}
                             >
-                                Logout
-                            </Button>
+                                <Avatar sx={{ width: 32, height: 32, bgcolor: 'white', color: 'primary.main' }}>
+                                    <Person />
+                                </Avatar>
+                            </IconButton>
+                            <Menu
+                                anchorEl={profileMenuAnchor}
+                                open={Boolean(profileMenuAnchor)}
+                                onClose={handleProfileMenuClose}
+                                anchorOrigin={{
+                                    vertical: 'bottom',
+                                    horizontal: 'right',
+                                }}
+                                transformOrigin={{
+                                    vertical: 'top',
+                                    horizontal: 'right',
+                                }}
+                            >
+                                <MenuItem onClick={handleSeeProfile}>
+                                    <ListItemIcon>
+                                        <Person fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText>See Profile</ListItemText>
+                                </MenuItem>
+                                <MenuItem onClick={handleLogout}>
+                                    <ListItemIcon>
+                                        <ExitToApp fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText>Logout</ListItemText>
+                                </MenuItem>
+                            </Menu>
                         </Box>
                     </Toolbar>
                 </AppBar>
 
-                {/* Sidebar */}
-                <DashboardSidebar
-                    menuItems={sidebarMenuItems}
-                    open={sidebarOpen}
-                    onClose={() => setSidebarOpen(false)}
-                    title="Discovery"
-                />
+                <Box sx={{ display: 'flex', flex: 1, overflowX: 'hidden' }}>
+                    {/* Sidebar Navigation */}
+                    <DashboardSidebar
+                        menuItems={sidebarMenuItems}
+                        open={sidebarOpen}
+                        collapsed={sidebarCollapsed}
+                        onClose={() => setSidebarOpen(false)}
+                        title="Menu"
+                    />
 
-                {/* Main Content */}
-                <Box
-                    component="main"
-                    sx={{
-                        flexGrow: 1,
-                        p: 3,
-                        pt: 10,
-                        backgroundColor: 'background.default',
-                        overflow: 'auto'
-                    }}
-                >
-                    <Container maxWidth="md">
-                        {/* Stats Cards */}
-                        <Grid container spacing={2} sx={{ mb: 4 }}>
-                            <Grid item xs={12} sm={4}>
-                                <Card>
-                                    <CardContent sx={{ textAlign: 'center' }}>
-                                        <Article sx={{ fontSize: 32, color: 'primary.main', mb: 1 }} />
-                                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                                            {stats.published}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Articles Available
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
+                    {/* Main Content */}
+                    <Box
+                        component="main"
+                        sx={{
+                            flex: 1,
+                            p: 3,
+                            backgroundColor: 'background.default',
+                            overflow: 'auto',
+                            display: 'flex',
+                            flexDirection: 'column'
+                        }}
+                    >
+                        <Container maxWidth="md" sx={{ flex: 1 }}>
+                            {/* Stats Cards */}
+                            <Grid container spacing={2} sx={{ mb: 4 }}>
+                                <Grid item xs={12} sm={4}>
+                                    <Card>
+                                        <CardContent sx={{ textAlign: 'center' }}>
+                                            <Article sx={{ fontSize: 32, color: 'primary.main', mb: 1 }} />
+                                            <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                                                {stats.published}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Articles Available
+                                            </Typography>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                                <Grid item xs={12} sm={4}>
+                                    <Card>
+                                        <CardContent sx={{ textAlign: 'center' }}>
+                                            <Search sx={{ fontSize: 32, color: 'secondary.main', mb: 1 }} />
+                                            <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                                                {stats.totalViews}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Total Views
+                                            </Typography>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
+                                <Grid item xs={12} sm={4}>
+                                    <Card>
+                                        <CardContent sx={{ textAlign: 'center' }}>
+                                            <ChatBubble sx={{ fontSize: 32, color: '#f57c00', mb: 1 }} />
+                                            <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                                                {totalComments}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                Community Comments
+                                            </Typography>
+                                        </CardContent>
+                                    </Card>
+                                </Grid>
                             </Grid>
-                            <Grid item xs={12} sm={4}>
-                                <Card>
-                                    <CardContent sx={{ textAlign: 'center' }}>
-                                        <Search sx={{ fontSize: 32, color: 'secondary.main', mb: 1 }} />
-                                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                                            {stats.totalViews}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Total Views
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                            <Grid item xs={12} sm={4}>
-                                <Card>
-                                    <CardContent sx={{ textAlign: 'center' }}>
-                                        <ChatBubble sx={{ fontSize: 32, color: '#f57c00', mb: 1 }} />
-                                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-                                            {stats.totalComments}
-                                        </Typography>
-                                        <Typography variant="body2" color="text.secondary">
-                                            Community Comments
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        </Grid>
 
-                        {/* Search */}
-                        <Paper sx={{ p: 3, mb: 4 }}>
-                            <TextField
-                                placeholder="Search articles..."
-                                fullWidth
-                                size="small"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                InputProps={{
-                                    startAdornment: (
-                                        <Search sx={{ mr: 1, color: 'text.secondary' }} />
-                                    ),
-                                }}
-                            />
-                        </Paper>
+                            {/* Search */}
+                            <Paper sx={{ p: 3, mb: 4 }}>
+                                <TextField
+                                    placeholder="Search articles..."
+                                    fullWidth
+                                    size="small"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    InputProps={{
+                                        startAdornment: (
+                                            <Search sx={{ mr: 1, color: 'text.secondary' }} />
+                                        ),
+                                    }}
+                                />
+                            </Paper>
 
-                        {/* Articles Feed */}
-                        <Grid container spacing={3}>
-                            {filteredArticles.length > 0 ? (
-                                filteredArticles.map((article) => (
-                                    <Grid item xs={12} key={article.id}>
-                                        <Card>
+                            {/* Articles Feed */}
+                            <Box sx={{ flex: 1 }}>
+                                {filteredArticles.length > 0 ? (
+                                    filteredArticles.map((article) => (
+                                        <Card key={article.id} sx={{ mb: 3 }}>
                                             {/* Article Header */}
                                             <CardHeader
                                                 avatar={<Avatar sx={{ bgcolor: 'primary.main' }}>
@@ -354,7 +455,7 @@ export default function StudentDashboard() {
                                                         👁️ {article.views} views
                                                     </Typography>
                                                     <Typography variant="caption" color="text.secondary">
-                                                        💬 {articleComments[article.id]?.length || 0} comments
+                                                        💬 Comments
                                                     </Typography>
                                                 </Box>
 
@@ -368,8 +469,8 @@ export default function StudentDashboard() {
                                                     >
                                                         Like
                                                     </Button>
-                                                    <Button size="small" startIcon={<CommentIcon />}>
-                                                        {articleComments[article.id]?.length || 0} Comments
+                                                    <Button size="small" startIcon={<CommentIcon />} onClick={() => handleCommentsClick(article)}>
+                                                        Comments
                                                     </Button>
                                                     <Button size="small" startIcon={<Share />}>
                                                         Share
@@ -377,59 +478,20 @@ export default function StudentDashboard() {
                                                 </Box>
 
                                                 {/* Comments Section */}
-                                                <Box sx={{ mb: 2 }}>
-                                                    <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 'bold' }}>
-                                                        Comments ({articleComments[article.id]?.length || 0})
-                                                    </Typography>
-
-                                                    {/* Existing Comments */}
-                                                    <List dense sx={{ mb: 2 }}>
-                                                        {articleComments[article.id]?.map((comment) => (
-                                                            <ListItem key={comment.id} disableGutters>
-                                                                <Box sx={{ width: '100%' }}>
-                                                                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                                                                            {comment.author}
-                                                                        </Typography>
-                                                                        <Typography variant="caption" color="text.secondary">
-                                                                            {comment.date}
-                                                                        </Typography>
-                                                                    </Box>
-                                                                    <Typography variant="body2" color="text.secondary">
-                                                                        {comment.text}
-                                                                    </Typography>
-                                                                </Box>
-                                                            </ListItem>
-                                                        ))}
-                                                    </List>
-
-                                                    {/* Add Comment */}
-                                                    <Box sx={{ display: 'flex', gap: 1 }}>
-                                                        <TextField
-                                                            fullWidth
-                                                            size="small"
-                                                            placeholder="Add a comment..."
-                                                            value={commentText}
-                                                            onChange={(e) => setCommentText(e.target.value)}
-                                                            multiline
-                                                            rows={2}
-                                                        />
-                                                        <Button
-                                                            variant="contained"
-                                                            startIcon={<Send />}
-                                                            onClick={() => handleAddComment(article.id)}
-                                                            sx={{ alignSelf: 'flex-end' }}
-                                                        >
-                                                            Post
-                                                        </Button>
-                                                    </Box>
-                                                </Box>
+                                                <Comments
+                                                    articleId={article.id}
+                                                    currentUser="You"
+                                                    placeholder="Add a comment..."
+                                                    showAvatar={true}
+                                                    onCommentsChange={(count) => {
+                                                        // Update total comments count
+                                                        setTotalComments(prev => prev + count);
+                                                    }}
+                                                />
                                             </CardContent>
                                         </Card>
-                                    </Grid>
-                                ))
-                            ) : (
-                                <Grid item xs={12}>
+                                    ))
+                                ) : (
                                     <Card>
                                         <CardContent sx={{ textAlign: 'center', py: 4 }}>
                                             <Typography color="text.secondary">
@@ -437,11 +499,89 @@ export default function StudentDashboard() {
                                             </Typography>
                                         </CardContent>
                                     </Card>
-                                </Grid>
-                            )}
-                        </Grid>
-                    </Container>
+                                )}
+                            </Box>
+                        </Container>
+                    </Box>
                 </Box>
+
+                {/* Footer - Engagement Stats */}
+                <Box sx={{ 
+                    backgroundColor: 'background.paper', 
+                    borderTop: '1px solid', 
+                    borderColor: 'divider',
+                    py: 2,
+                    px: 3,
+                    textAlign: 'center'
+                }}>
+                    <Typography variant="body2" color="text.secondary">
+                        📊 Total Engagement: {totalComments} comments across all articles
+                    </Typography>
+                </Box>
+
+                {/* Comments Modal */}
+                <Modal
+                    open={commentsModalOpen}
+                    onClose={handleCloseCommentsModal}
+                    closeAfterTransition
+                    BackdropComponent={Backdrop}
+                    BackdropProps={{
+                        timeout: 500,
+                    }}
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}
+                >
+                    <Box sx={{
+                        backgroundColor: 'background.paper',
+                        borderRadius: 2,
+                        boxShadow: 24,
+                        p: 4,
+                        maxWidth: 600,
+                        width: '90%',
+                        maxHeight: '80vh',
+                        overflow: 'auto',
+                        position: 'relative'
+                    }}>
+                        {/* Close Button */}
+                        <IconButton
+                            onClick={handleCloseCommentsModal}
+                            sx={{
+                                position: 'absolute',
+                                right: 8,
+                                top: 8,
+                                color: 'grey.500'
+                            }}
+                        >
+                            ✕
+                        </IconButton>
+
+                        {/* Modal Header */}
+                        <Typography variant="h6" sx={{ mb: 2, pr: 4 }}>
+                            💬 Comments
+                        </Typography>
+
+                        {selectedArticle && (
+                            <Typography variant="subtitle2" sx={{ mb: 3, color: 'text.secondary' }}>
+                                Article: {selectedArticle.title}
+                            </Typography>
+                        )}
+
+                        {/* Comments List */}
+                        <Box sx={{ maxHeight: '50vh', overflow: 'auto', mb: 3 }}>
+                            {selectedArticle && (
+                                <Comments
+                                    articleId={selectedArticle.id}
+                                    currentUser="You"
+                                    placeholder="Add a comment..."
+                                    showAvatar={true}
+                                />
+                            )}
+                        </Box>
+                    </Box>
+                </Modal>
             </Box>
         </>
     );

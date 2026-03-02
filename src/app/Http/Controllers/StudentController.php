@@ -100,6 +100,27 @@ class StudentController extends Controller
     }
 
     /**
+     * Display user's comments across all articles.
+     */
+    public function myComments(): InertiaResponse
+    {
+        // Fetch ONLY the authenticated student's comments from PUBLISHED articles with eager loading
+        $comments = Comment::where('student_id', Auth::id())
+            ->whereHas('article', function($query) {
+                $query->whereHas('status', function($statusQuery) {
+                    $statusQuery->where('name', 'Published');
+                });
+            })
+            ->with(['article', 'article.status'])
+            ->latest()
+            ->get();
+
+        return Inertia::render('Student/MyComments', [
+            'comments' => $comments
+        ]);
+    }
+
+    /**
      * Search for published articles.
      */
     public function search(Request $request): InertiaResponse|RedirectResponse

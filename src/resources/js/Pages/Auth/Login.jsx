@@ -96,16 +96,8 @@ export default function Login({ status, canResetPassword }) {
                             onChange={(e) => setData('email', e.target.value)}
                             error={!!errors.email}
                             helperText={errors.email}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: 2,
-                                    '&:hover fieldset': {
-                                        borderColor: 'primary.main',
-                                    },
-                                }
-                            }}
+                          
                         />
-                        
                         <TextField
                             margin="normal"
                             required
@@ -119,14 +111,7 @@ export default function Login({ status, canResetPassword }) {
                             onChange={(e) => setData('password', e.target.value)}
                             error={!!errors.password}
                             helperText={errors.password}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: 2,
-                                    '&:hover fieldset': {
-                                        borderColor: 'primary.main',
-                                    },
-                                }
-                            }}
+                            
                             InputProps={{
                                 endAdornment: (
                                     <Button

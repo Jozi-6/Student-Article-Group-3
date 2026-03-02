@@ -144,14 +144,7 @@ export default function Register() {
                                         onChange={(e) => setData('name', e.target.value)}
                                         error={!!errors.name}
                                         helperText={errors.name}
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: 2,
-                                                '&:hover fieldset': {
-                                                    borderColor: 'primary.main',
-                                                },
-                                            }
-                                        }}
+                                        
                                         InputProps={{
                                             startAdornment: (
                                                 <Person sx={{ mr: 1, color: 'primary.main' }} />
@@ -171,14 +164,7 @@ export default function Register() {
                                         onChange={(e) => setData('email', e.target.value)}
                                         error={!!errors.email}
                                         helperText={errors.email}
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: 2,
-                                                '&:hover fieldset': {
-                                                    borderColor: 'primary.main',
-                                                },
-                                            }
-                                        }}
+                                        
                                         InputProps={{
                                             startAdornment: (
                                                 <Email sx={{ mr: 1, color: 'primary.main' }} />
@@ -224,14 +210,7 @@ export default function Register() {
                                         onChange={(e) => setData('password', e.target.value)}
                                         error={!!errors.password}
                                         helperText={errors.password}
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: 2,
-                                                '&:hover fieldset': {
-                                                    borderColor: 'primary.main',
-                                                },
-                                            }
-                                        }}
+                                        
                                         InputProps={{
                                             startAdornment: (
                                                 <Lock sx={{ mr: 1, color: 'primary.main' }} />
@@ -262,14 +241,7 @@ export default function Register() {
                                         onChange={(e) => setData('password_confirmation', e.target.value)}
                                         error={!!errors.password_confirmation}
                                         helperText={errors.password_confirmation}
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: 2,
-                                                '&:hover fieldset': {
-                                                    borderColor: 'primary.main',
-                                                },
-                                            }
-                                        }}
+                                        
                                         InputProps={{
                                             startAdornment: (
                                                 <Lock sx={{ mr: 1, color: 'primary.main' }} />

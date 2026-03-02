@@ -15,7 +15,11 @@ import {
     Paper,
     Divider,
     Avatar,
-    IconButton
+    IconButton,
+    Menu,
+    MenuItem,
+    ListItemIcon,
+    ListItemText
 } from '@mui/material';
 import {
     AutoStories,
@@ -27,7 +31,8 @@ import {
     Person,
     Mail,
     Visibility,
-    VisibilityOff
+    VisibilityOff,
+    ExitToApp
 } from '@mui/icons-material';
 import { useState } from 'react';
 import { useForm, router } from '@inertiajs/react';
@@ -36,6 +41,7 @@ export default function Profile({ auth, mustVerifyEmail, status }) {
     const [showPassword, setShowPassword] = useState(false);
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+    const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
 
     const profileForm = useForm({
         name: auth.user.name,
@@ -67,6 +73,28 @@ export default function Profile({ auth, mustVerifyEmail, status }) {
         });
     };
 
+    const handleProfileMenuOpen = (event) => {
+        setProfileMenuAnchor(event.currentTarget);
+    };
+
+    const handleProfileMenuClose = () => {
+        setProfileMenuAnchor(null);
+    };
+
+    const handleBackToDashboard = () => {
+        router.get('/student/dashboard');
+    };
+
+    const handleSeeProfile = () => {
+        handleProfileMenuClose();
+        // Stay on profile page - no navigation needed
+    };
+
+    const handleLogout = () => {
+        handleProfileMenuClose();
+        router.post('/logout');
+    };
+
     return (
         <>
             <Head title="Profile" />
@@ -80,34 +108,22 @@ export default function Profile({ auth, mustVerifyEmail, status }) {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <Button
                             component={Link}
-                            href={route('dashboard')}
+                            href="/student/dashboard"
                             variant="text"
                             size="small"
                             sx={{ color: 'white', minWidth: 'auto' }}
                         >
                             <ArrowBack sx={{ mr: 1 }} />
-                            Back
+                            Back to Dashboard
                         </Button>
                         <AutoStories sx={{ fontSize: 32, color: 'white' }} />
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white' }}>
                             Profile Settings
                         </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                        <Button
-                            component={Link}
-                            href={route('dashboard')}
-                            variant="outlined"
-                            size="small"
-                            sx={{ color: 'white', borderColor: 'white' }}
-                        >
-                            Dashboard
-                        </Button>
-                        <Button
-                            component="button"
-                            onClick={() => router.post(route('logout'))}
-                            variant="text"
-                            size="small"
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                        <IconButton
+                            onClick={handleProfileMenuOpen}
                             sx={{ 
                                 color: 'white',
                                 '&:hover': {
@@ -115,8 +131,36 @@ export default function Profile({ auth, mustVerifyEmail, status }) {
                                 }
                             }}
                         >
-                            Logout
-                        </Button>
+                            <Avatar sx={{ width: 32, height: 32, bgcolor: 'white', color: 'primary.main' }}>
+                                <Person />
+                            </Avatar>
+                        </IconButton>
+                        <Menu
+                            anchorEl={profileMenuAnchor}
+                            open={Boolean(profileMenuAnchor)}
+                            onClose={handleProfileMenuClose}
+                            anchorOrigin={{
+                                vertical: 'bottom',
+                                horizontal: 'right',
+                            }}
+                            transformOrigin={{
+                                vertical: 'top',
+                                horizontal: 'right',
+                            }}
+                        >
+                            <MenuItem onClick={handleSeeProfile}>
+                                <ListItemIcon>
+                                    <Person fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>See Profile</ListItemText>
+                            </MenuItem>
+                            <MenuItem onClick={handleLogout}>
+                                <ListItemIcon>
+                                    <ExitToApp fontSize="small" />
+                                </ListItemIcon>
+                                <ListItemText>Logout</ListItemText>
+                            </MenuItem>
+                        </Menu>
                     </Box>
                 </Toolbar>
             </AppBar>

@@ -1,4 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import {
     Box,
     Container,
@@ -35,10 +37,43 @@ import {
     Psychology,
     Lightbulb,
     Star,
-    ThumbUp
+    ThumbUp,
+    ArrowBackIos,
+    ArrowForwardIos
 } from '@mui/icons-material';
 
 export default function Welcome({ auth, laravelVersion, phpVersion }) {
+    const [articles, setArticles] = useState([]);
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchLatestArticles();
+    }, []);
+
+    const fetchLatestArticles = async () => {
+        try {
+            const response = await axios.get('/api/latest-articles');
+            setArticles(response.data);
+        } catch (error) {
+            console.error('Error fetching articles:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const nextSlide = () => {
+        setCurrentSlide((prev) => (prev + 1) % Math.ceil(articles.length / 3));
+    };
+
+    const prevSlide = () => {
+        setCurrentSlide((prev) => (prev - 1 + Math.ceil(articles.length / 3)) % Math.ceil(articles.length / 3));
+    };
+
+    const getVisibleArticles = () => {
+        const start = currentSlide * 3;
+        return articles.slice(start, start + 3);
+    };
     return (
         <>
             <Head title="Welcome - Article Publication Platform" />
@@ -52,7 +87,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <AutoStories sx={{ fontSize: 32, color: 'white' }} />
                         <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white' }}>
-                            📰 Article Publication Platform
+                            Article Publication Platform
                         </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 2 }}>
@@ -126,7 +161,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                 <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
                     {/* Hero Content */}
                     <Box sx={{ 
-                        py: 8, 
+                        py: 6, 
                         textAlign: 'center',
                         display: 'flex',
                         flexDirection: 'column',
@@ -223,7 +258,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
 
                     {/* Role Selection Section */}
                     <Box sx={{ 
-                        py: 8, 
+                        py: 6, 
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
@@ -241,14 +276,27 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                         fontSize: { xs: '2rem', md: '2.5rem' }
                                     }}
                                 >
-                                    Choose Your Role
+                                    Login As
                                 </Typography>
                             </Box>
                         </Slide>
 
-                        <Grid container spacing={4} justifyContent="center" alignItems="stretch">
+                        <Box sx={{ 
+                            display: 'flex',
+                            flexDirection: { xs: 'column', lg: 'row' },
+                            gap: 3,
+                            justifyContent: 'center',
+                            alignItems: 'stretch',
+                            maxWidth: '1200px',
+                            mx: 'auto',
+                            width: '100%'
+                        }}>
                             {/* Writer Dashboard */}
-                            <Grid item xs={12} md={6} lg={4}>
+                            <Box sx={{ 
+                                flex: { lg: '1 1 0' },
+                                maxWidth: { lg: '380px' },
+                                width: '100%'
+                            }}>
                                 <Slide in timeout={1400} direction="up">
                                     <Card sx={{ 
                                         height: '100%', 
@@ -365,10 +413,14 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                         </CardContent>
                                     </Card>
                                 </Slide>
-                            </Grid>
+                            </Box>
 
                             {/* Editor Dashboard */}
-                            <Grid item xs={12} md={6} lg={4}>
+                            <Box sx={{ 
+                                flex: { lg: '1 1 0' },
+                                maxWidth: { lg: '380px' },
+                                width: '100%'
+                            }}>
                                 <Slide in timeout={1600} direction="up">
                                     <Card sx={{ 
                                         height: '100%', 
@@ -485,10 +537,14 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                         </CardContent>
                                     </Card>
                                 </Slide>
-                            </Grid>
+                            </Box>
 
                             {/* Student Dashboard */}
-                            <Grid item xs={12} md={6} lg={4}>
+                            <Box sx={{ 
+                                flex: { lg: '1 1 0' },
+                                maxWidth: { lg: '380px' },
+                                width: '100%'
+                            }}>
                                 <Slide in timeout={1800} direction="up">
                                     <Card sx={{ 
                                         height: '100%', 
@@ -610,13 +666,185 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                         </CardContent>
                                     </Card>
                                 </Slide>
-                            </Grid>
-                        </Grid>
+                            </Box>
+                        </Box>
+                    </Box>
+
+                    {/* Latest Articles Carousel */}
+                    <Box sx={{ 
+                        py: 6, 
+                        textAlign: 'center',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
+                        <Slide in timeout={2000} direction="up">
+                            <Box sx={{ maxWidth: '1000px', mx: 'auto', mb: 6 }}>
+                                <Typography
+                                    variant="h4"
+                                    sx={{ 
+                                        fontWeight: 'bold', 
+                                        mb: 3, 
+                                        textAlign: 'center', 
+                                        color: 'white',
+                                        fontSize: { xs: '2rem', md: '2.5rem' }
+                                    }}
+                                >
+                                    Latest Published Articles
+                                </Typography>
+                            </Box>
+                        </Slide>
+
+                        {!loading && articles.length > 0 && (
+                            <Box sx={{ position: 'relative', maxWidth: '1200px', mx: 'auto', px: 4 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Button
+                                        onClick={prevSlide}
+                                        sx={{
+                                            position: 'absolute',
+                                            left: 0,
+                                            zIndex: 2,
+                                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                            color: 'primary.main',
+                                            minWidth: 40,
+                                            width: 40,
+                                            height: 40,
+                                            borderRadius: '50%',
+                                            '&:hover': {
+                                                backgroundColor: 'white',
+                                                transform: 'scale(1.1)'
+                                            }
+                                        }}
+                                    >
+                                        <ArrowBackIos />
+                                    </Button>
+
+                                    <Grid container spacing={3} sx={{ maxWidth: '900px' }}>
+                                        {getVisibleArticles().map((article, index) => (
+                                            <Grid item xs={12} sm={6} md={4} key={article.id}>
+                                                <Slide in timeout={2100 + index * 100} direction="up">
+                                                    <Card sx={{ 
+                                                        height: '100%', 
+                                                        boxShadow: '0 8px 32px rgba(0,0,0,0.1)', 
+                                                        transition: 'all 0.3s ease',
+                                                        background: 'rgba(255, 255, 255, 0.95)',
+                                                        backdropFilter: 'blur(10px)',
+                                                        '&:hover': { 
+                                                            transform: 'translateY(-8px)',
+                                                            boxShadow: '0 16px 48px rgba(0,0,0,0.2)'
+                                                        }
+                                                    }}>
+                                                        <CardContent sx={{ p: 3 }}>
+                                                            <Typography variant="h6" sx={{ 
+                                                                fontWeight: 'bold', 
+                                                                mb: 2, 
+                                                                color: 'primary.main',
+                                                                lineHeight: 1.3
+                                                            }}>
+                                                                {article.title}
+                                                            </Typography>
+                                                            
+                                                            <Typography variant="body2" sx={{ 
+                                                                mb: 3, 
+                                                                color: 'text.secondary', 
+                                                                lineHeight: 1.6,
+                                                                display: '-webkit-box',
+                                                                WebkitLineClamp: 3,
+                                                                WebkitBoxOrient: 'vertical',
+                                                                overflow: 'hidden'
+                                                            }}>
+                                                                {article.excerpt}
+                                                            </Typography>
+
+                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                                                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                                                    By {article.writer}
+                                                                </Typography>
+                                                                <Typography variant="caption" sx={{ 
+                                                                    backgroundColor: 'primary.light', 
+                                                                    color: 'white', 
+                                                                    px: 1, 
+                                                                    py: 0.5, 
+                                                                    borderRadius: 1 
+                                                                }}>
+                                                                    {article.category}
+                                                                </Typography>
+                                                            </Box>
+
+                                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                                                    {article.comments_count} comments
+                                                                </Typography>
+                                                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                                                    {article.updated_at}
+                                                                </Typography>
+                                                            </Box>
+                                                        </CardContent>
+                                                    </Card>
+                                                </Slide>
+                                            </Grid>
+                                        ))}
+                                    </Grid>
+
+                                    <Button
+                                        onClick={nextSlide}
+                                        sx={{
+                                            position: 'absolute',
+                                            right: 0,
+                                            zIndex: 2,
+                                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                            color: 'primary.main',
+                                            minWidth: 40,
+                                            width: 40,
+                                            height: 40,
+                                            borderRadius: '50%',
+                                            '&:hover': {
+                                                backgroundColor: 'white',
+                                                transform: 'scale(1.1)'
+                                            }
+                                        }}
+                                    >
+                                        <ArrowForwardIos />
+                                    </Button>
+                                </Box>
+
+                                {/* Slide indicators */}
+                                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3, gap: 1 }}>
+                                    {Array.from({ length: Math.ceil(articles.length / 3) }).map((_, index) => (
+                                        <Box
+                                            key={index}
+                                            sx={{
+                                                width: currentSlide === index ? 24 : 8,
+                                                height: 8,
+                                                backgroundColor: currentSlide === index ? 'white' : 'rgba(255, 255, 255, 0.5)',
+                                                borderRadius: 4,
+                                                transition: 'all 0.3s ease',
+                                                cursor: 'pointer'
+                                            }}
+                                            onClick={() => setCurrentSlide(index)}
+                                        />
+                                    ))}
+                                </Box>
+                            </Box>
+                        )}
+
+                        {loading && (
+                            <Box sx={{ textAlign: 'center', color: 'white' }}>
+                                <Typography>Loading latest articles...</Typography>
+                            </Box>
+                        )}
+
+                        {!loading && articles.length === 0 && (
+                            <Box sx={{ textAlign: 'center', color: 'white' }}>
+                                <Typography>No published articles available yet.</Typography>
+                            </Box>
+                        )}
                     </Box>
 
                     {/* Features Section */}
                     <Box sx={{ 
-                        py: 8, 
+                        py: 6, 
                         textAlign: 'center',
                         display: 'flex',
                         flexDirection: 'column',
@@ -740,47 +968,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                 <Typography variant="body1" sx={{ mb: 4, color: 'rgba(255, 255, 255, 0.9)', textAlign: 'center' }}>
                                     Join our community of writers, editors, and readers today. Start creating, reviewing, or exploring quality content.
                                 </Typography>
-                                <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
-                                    <Button
-                                        component={Link}
-                                        href={route('register')}
-                                        variant="contained"
-                                        size="large"
-                                        startIcon={<Star />}
-                                        sx={{
-                                            backgroundColor: 'white',
-                                            color: 'primary.main',
-                                            px: 4,
-                                            py: 1.5,
-                                            '&:hover': {
-                                                backgroundColor: 'grey.100',
-                                                transform: 'translateY(-2px)',
-                                                boxShadow: '0 8px 25px rgba(255, 255, 255, 0.3)'
-                                            }
-                                        }}
-                                    >
-                                        Create Account
-                                    </Button>
-                                    <Button
-                                        component={Link}
-                                        href={route('login')}
-                                        variant="outlined"
-                                        size="large"
-                                        sx={{
-                                            color: 'white',
-                                            borderColor: 'white',
-                                            px: 4,
-                                            py: 1.5,
-                                            '&:hover': {
-                                                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                                borderColor: 'white',
-                                                transform: 'translateY(-2px)'
-                                            }
-                                        }}
-                                    >
-                                        Sign In
-                                    </Button>
-                                </Box>
                             </Paper>
                         </Slide>
                     </Box>
@@ -799,7 +986,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
             >
                 <Container maxWidth="lg">
                     <Typography variant="body2" color="text.secondary">
-                        © 2024 Article Publication Platform. All rights reserved. | Laravel v{laravelVersion} | PHP v{phpVersion}
+                        © 2026 Article Publication Platform Group3. All rights reserved.
                     </Typography>
                 </Container>
             </Box>

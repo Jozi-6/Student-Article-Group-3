@@ -20,10 +20,10 @@ export default function Dashboard({ auth }) {
                     router.visit(route('student.dashboard'));
                     break;
                 default:
-                    router.visit(route('welcome'));
+                    router.visit('/');
             }
         } else {
-            router.visit(route('welcome'));
+            router.visit('/');
         }
     }, [auth?.user?.role]);
 
