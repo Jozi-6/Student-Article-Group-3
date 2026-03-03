@@ -21,7 +21,8 @@ import {
     ExpandMore,
     ExpandLess,
     VisibilityOff,
-    Article
+    Article,
+    Block
 } from '@mui/icons-material';
 
 export default function DashboardSidebar({ 
@@ -33,28 +34,63 @@ export default function DashboardSidebar({
     onToggle,
     hiddenArticles = [],
     articles = [],
-    onUnhideArticle
+    blockedPublishers = [],
+    onUnhideArticle,
+    onUnblockPublisher
 }) {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const [hiddenArticlesExpanded, setHiddenArticlesExpanded] = useState(false);
+    const [blockedArticlesExpanded, setBlockedArticlesExpanded] = useState(false);
 
     const drawerWidth = collapsed ? 60 : 280;
 
     const content = (
         <Box sx={{ pt: 2 }}>
             {/* Header */}
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2, mb: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 2, mb: 2 }}>
                 {!collapsed && (
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            fontWeight: 'bold',
-                            color: 'primary.main'
-                        }}
-                    >
-                        {title}
-                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <IconButton
+                            onClick={onToggle}
+                            sx={{ 
+                                color: 'primary.main',
+                                minWidth: 'auto',
+                                padding: 1,
+                                '&:hover': {
+                                    backgroundColor: 'primary.light',
+                                }
+                            }}
+                        >
+                            <MenuIcon sx={{ fontSize: '1.2rem' }} />
+                        </IconButton>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                fontWeight: 'bold',
+                                color: 'primary.main'
+                            }}
+                        >
+                            {title}
+                        </Typography>
+                    </Box>
+                )}
+                {collapsed && (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                        <IconButton
+                            onClick={onToggle}
+                            sx={{ 
+                                color: 'primary.main',
+                                minWidth: 'auto',
+                                padding: 1,
+                                '&:hover': {
+                                    backgroundColor: 'primary.light',
+                                }
+                            }}
+                        >
+                            <MenuIcon sx={{ fontSize: '1.2rem' }} />
+                        </IconButton>
+                    </Box>
                 )}
             </Box>
             <Divider />
@@ -216,6 +252,106 @@ export default function DashboardSidebar({
                     </Collapse>
                 </>
             )}
+
+            {/* Blocked Articles Section */}
+            {!collapsed && blockedPublishers.length > 0 && (
+                <>
+                    <Divider sx={{ my: 2 }} />
+                    <Box sx={{ px: 2, mb: 1 }}>
+                        <ListItem
+                            button
+                            onClick={() => setBlockedArticlesExpanded(!blockedArticlesExpanded)}
+                            sx={{
+                                px: 1,
+                                py: 1,
+                                borderRadius: 1,
+                                '&:hover': {
+                                    backgroundColor: 'action.hover'
+                                }
+                            }}
+                        >
+                            <ListItemIcon sx={{ minWidth: 40 }}>
+                                <Block fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText
+                                primary="Blocked"
+                                primaryTypographyProps={{
+                                    variant: 'body2',
+                                    fontWeight: 500
+                                }}
+                            />
+                            <Chip 
+                                label={articles.filter(article => blockedPublishers.includes(article.writer?.id)).length} 
+                                size="small" 
+                                color="error"
+                                sx={{ ml: 1 }}
+                            />
+                            {blockedArticlesExpanded ? <ExpandLess /> : <ExpandMore />}
+                        </ListItem>
+                    </Box>
+                    <Collapse in={blockedArticlesExpanded} timeout="auto" unmountOnExit>
+                        <List sx={{ px: 2, pb: 2 }}>
+                            {articles
+                                .filter(article => blockedPublishers.includes(article.writer?.id))
+                                .map(article => (
+                                    <ListItem
+                                        key={article.id}
+                                        sx={{
+                                            px: 1,
+                                            py: 0.5,
+                                            borderRadius: 1,
+                                            mb: 0.5,
+                                            backgroundColor: 'grey.50',
+                                            '&:hover': {
+                                                backgroundColor: 'grey.100'
+                                            }
+                                        }}
+                                    >
+                                        <ListItemIcon sx={{ minWidth: 32 }}>
+                                            <Article fontSize="small" color="action" />
+                                        </ListItemIcon>
+                                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                                            <Tooltip title={article.title} placement="top">
+                                                <Typography
+                                                    variant="caption"
+                                                    sx={{
+                                                        fontWeight: 500,
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        whiteSpace: 'nowrap',
+                                                        display: 'block'
+                                                    }}
+                                                >
+                                                    {article.title}
+                                                </Typography>
+                                            </Tooltip>
+                                            <Typography variant="caption" color="text.secondary">
+                                                by {article.writer?.name || 'Unknown'}
+                                            </Typography>
+                                        </Box>
+                                        {onUnblockPublisher && (
+                                            <Tooltip title="Unblock publisher">
+                                                <IconButton
+                                                    size="small"
+                                                    onClick={() => onUnblockPublisher(article.writer?.id)}
+                                                    sx={{
+                                                        p: 0.5,
+                                                        '&:hover': {
+                                                            backgroundColor: 'error.light',
+                                                            color: 'error.main'
+                                                        }
+                                                    }}
+                                                >
+                                                    <Block fontSize="small" />
+                                                </IconButton>
+                                            </Tooltip>
+                                        )}
+                                    </ListItem>
+                                ))}
+                        </List>
+                    </Collapse>
+                </>
+            )}
         </Box>
     );
 
@@ -245,10 +381,10 @@ export default function DashboardSidebar({
                 backgroundColor: 'background.paper',
                 borderRight: '1px solid',
                 borderColor: 'divider',
-                height: '100vh',  // Full viewport height
+                height: 'calc(100vh - 64px)',  // Full viewport height minus header
                 position: 'fixed',  // Fixed position to prevent scrolling with main content
-                top: 0,           // Start from top of viewport
-                left: 0,          // Ensure it's positioned from left edge
+                top: '64px',        // Start below the header
+                left: 0,            // Ensure it's positioned from left edge
                 overflowY: 'auto',  // Allow scrolling within sidebar if content overflows
                 zIndex: theme.zIndex.drawer - 1,  // Ensure it's below header but above content
                 transition: 'width 0.3s ease',  // Smooth transition when collapsing

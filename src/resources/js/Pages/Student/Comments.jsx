@@ -14,7 +14,7 @@ import {
     Menu,
     MenuItem
 } from '@mui/material';
-import { Send, Edit, Delete, MoreVert } from '@mui/icons-material';
+import { Send, Edit, Delete, MoreVert, Reply } from '@mui/icons-material';
 
 export default function Comments({ 
     articleId,
@@ -34,6 +34,8 @@ export default function Comments({
     const [editText, setEditText] = useState('');
     const [commentMenuAnchor, setCommentMenuAnchor] = useState(null);
     const [selectedCommentForMenu, setSelectedCommentForMenu] = useState(null);
+    const [replyingTo, setReplyingTo] = useState(null); // ID of comment being replied to
+    const [replyText, setReplyText] = useState('');
 
     // Load comments from localStorage on component mount
     useEffect(() => {
@@ -52,8 +54,24 @@ export default function Comments({
         // Listen for custom comment update events within the same page
         const handleCommentUpdate = (e) => {
             if (e.detail && e.detail.articleId === articleId) {
-                // Reload comments when a new comment is added to this article
-                loadComments();
+                if (e.detail.type === 'reply') {
+                    // Handle real-time reply updates
+                    const { newReply } = e.detail;
+                    setComments(prevComments => 
+                        prevComments.map(comment => {
+                            if (comment.id === newReply.parentId) {
+                                return {
+                                    ...comment,
+                                    replies: [...(comment.replies || []), newReply]
+                                };
+                            }
+                            return comment;
+                        })
+                    );
+                } else {
+                    // Handle new comments
+                    loadComments();
+                }
             }
         };
 
@@ -88,7 +106,12 @@ export default function Comments({
             
             if (storedComments) {
                 const parsedComments = JSON.parse(storedComments);
-                setComments(parsedComments);
+                // Ensure all comments have replies arrays for backward compatibility
+                const commentsWithReplies = parsedComments.map(comment => ({
+                    ...comment,
+                    replies: comment.replies || []
+                }));
+                setComments(commentsWithReplies);
             } else {
                 setComments([]);
             }
@@ -123,7 +146,8 @@ export default function Comments({
                 text: commentText.trim(),
                 author: currentUser,
                 timestamp: new Date().toISOString(),
-                date: new Date().toLocaleDateString()
+                date: new Date().toLocaleDateString(),
+                replies: [] // Initialize with empty replies array
             };
 
             // Add new comment to the beginning of the list
@@ -161,6 +185,74 @@ export default function Comments({
             e.preventDefault();
             handleSubmit();
         }
+    };
+
+    const handleReplySubmit = (parentCommentId) => {
+        if (!replyText.trim()) return;
+
+        try {
+            // Create new reply
+            const newReply = {
+                id: Date.now(), // Unique ID using timestamp
+                text: replyText.trim(),
+                author: 'Other User', // Simulate other user replying
+                timestamp: new Date().toISOString(),
+                date: new Date().toLocaleDateString(),
+                parentId: parentCommentId
+            };
+
+            // Update comments with the new reply
+            const updatedComments = comments.map(comment => {
+                if (comment.id === parentCommentId) {
+                    return {
+                        ...comment,
+                        replies: [...(comment.replies || []), newReply]
+                    };
+                }
+                return comment;
+            });
+
+            setComments(updatedComments);
+            setReplyText('');
+            setReplyingTo(null);
+            
+            // Save to localStorage immediately
+            const storageKey = `article_comments_${articleId}`;
+            localStorage.setItem(storageKey, JSON.stringify(updatedComments));
+            
+            // Dispatch custom event for real-time updates
+            window.dispatchEvent(new CustomEvent('commentUpdated', { 
+                detail: { 
+                    articleId, 
+                    newReply,
+                    type: 'reply'
+                } 
+            }));
+
+            showSnackbar('Reply posted successfully!', 'success');
+            
+        } catch (err) {
+            console.error('Error posting reply:', err);
+            setError('Failed to post reply. Please try again.');
+            showSnackbar('Failed to post reply', 'error');
+        }
+    };
+
+    const handleReplyKeyPress = (e, parentCommentId) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleReplySubmit(parentCommentId);
+        }
+    };
+
+    const startReply = (commentId) => {
+        setReplyingTo(commentId);
+        setReplyText('');
+    };
+
+    const cancelReply = () => {
+        setReplyingTo(null);
+        setReplyText('');
     };
 
     const showSnackbar = (message, severity = 'success') => {
@@ -317,6 +409,18 @@ export default function Comments({
                                                     <Typography variant="caption" color="text.secondary">
                                                         {comment.date}
                                                     </Typography>
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => startReply(comment.id)}
+                                                        sx={{ 
+                                                            p: 0.5,
+                                                            '&:hover': {
+                                                                backgroundColor: 'action.hover'
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Reply fontSize="small" />
+                                                    </IconButton>
                                                     {comment.author === currentUser && (
                                                         <IconButton
                                                             size="small"
@@ -384,6 +488,107 @@ export default function Comments({
                                                     <Typography variant="body2" color="text.secondary">
                                                         {comment.text}
                                                     </Typography>
+                                                )}
+                                                
+                                                {/* Replies Section */}
+                                                {comment.replies && comment.replies.length > 0 && (
+                                                    <Box sx={{ mt: 2, ml: 2 }}>
+                                                        <Typography variant="caption" sx={{ fontWeight: 'bold', color: 'text.secondary', mb: 1, display: 'block' }}>
+                                                            {comment.replies.length} {comment.replies.length === 1 ? 'Reply' : 'Replies'}
+                                                        </Typography>
+                                                        {comment.replies.map((reply) => (
+                                                            <Box key={reply.id} sx={{ 
+                                                                mb: 1, 
+                                                                p: 1, 
+                                                                backgroundColor: 'grey.50', 
+                                                                borderRadius: 1,
+                                                                borderLeft: '2px solid',
+                                                                borderLeftColor: 'primary.light'
+                                                            }}>
+                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                                                    {showAvatar && (
+                                                                        <Avatar sx={{ 
+                                                                            width: 20, 
+                                                                            height: 20, 
+                                                                            fontSize: '0.6rem',
+                                                                            bgcolor: 'secondary.main' 
+                                                                        }}>
+                                                                            {reply.author?.charAt(0)?.toUpperCase() || 'U'}
+                                                                        </Avatar>
+                                                                    )}
+                                                                    <Typography variant="caption" sx={{ fontWeight: 'bold' }}>
+                                                                        {reply.author}
+                                                                    </Typography>
+                                                                    <Typography variant="caption" color="text.secondary">
+                                                                        {reply.date}
+                                                                    </Typography>
+                                                                </Box>
+                                                                <Typography variant="caption" color="text.secondary" sx={{ ml: showAvatar ? 2.5 : 0 }}>
+                                                                    {reply.text}
+                                                                </Typography>
+                                                            </Box>
+                                                        ))}
+                                                    </Box>
+                                                )}
+                                                
+                                                {/* Reply Input */}
+                                                {replyingTo === comment.id && (
+                                                    <Box sx={{ mt: 2, ml: 2 }}>
+                                                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+                                                            {showAvatar && (
+                                                                <Avatar sx={{ 
+                                                                    width: 24, 
+                                                                    height: 24, 
+                                                                    fontSize: '0.75rem',
+                                                                    bgcolor: 'secondary.main',
+                                                                    mt: 0.5
+                                                                }}>
+                                                                    O
+                                                                </Avatar>
+                                                            )}
+                                                            <Box sx={{ flex: 1 }}>
+                                                                <TextField
+                                                                    fullWidth
+                                                                    size="small"
+                                                                    multiline
+                                                                    rows={2}
+                                                                    placeholder="Write a reply..."
+                                                                    value={replyText}
+                                                                    onChange={(e) => setReplyText(e.target.value)}
+                                                                    onKeyPress={(e) => handleReplyKeyPress(e, comment.id)}
+                                                                    sx={{
+                                                                        '& .MuiOutlinedInput-notchedOutline': {
+                                                                            border: 'none',
+                                                                        },
+                                                                        '& .MuiOutlinedInput-root': {
+                                                                            '&.Mui-focused fieldset': {
+                                                                                border: 'none',
+                                                                            },
+                                                                            '&:hover fieldset': {
+                                                                                border: 'none',
+                                                                            },
+                                                                            fieldset: {
+                                                                                border: 'none',
+                                                                            },
+                                                                        },
+                                                                    }}
+                                                                />
+                                                                <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', mt: 1 }}>
+                                                                    <Button size="small" onClick={cancelReply}>
+                                                                        Cancel
+                                                                    </Button>
+                                                                    <Button 
+                                                                        size="small" 
+                                                                        variant="contained" 
+                                                                        onClick={() => handleReplySubmit(comment.id)}
+                                                                        disabled={!replyText.trim()}
+                                                                    >
+                                                                        Reply
+                                                                    </Button>
+                                                                </Box>
+                                                            </Box>
+                                                        </Box>
+                                                    </Box>
                                                 )}
                                             </Box>
                                         </Box>

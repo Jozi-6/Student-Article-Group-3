@@ -385,23 +385,12 @@ export default function StudentDashboard() {
             
             <Box sx={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', overflowX: 'hidden' }}>
                 {/* Header */}
-                <AppBar position="static" sx={{ 
+                <AppBar position="fixed" sx={{ 
                     zIndex: (theme) => theme.zIndex.drawer + 1,
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 }}>
                     <Toolbar>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            <IconButton
-                                onClick={toggleSidebar}
-                                sx={{ 
-                                    color: 'white',
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                                    }
-                                }}
-                            >
-                                <MenuIcon />
-                            </IconButton>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flex: 1 }}>
                             <AutoStories sx={{ fontSize: 32, color: 'white' }} />
                             <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white' }}>
                                 Student Dashboard
@@ -462,10 +451,16 @@ export default function StudentDashboard() {
                         onToggle={toggleSidebar}
                         hiddenArticles={hiddenArticles}
                         articles={articles}
+                        blockedPublishers={blockedPublishers}
                         onUnhideArticle={(articleId) => {
                             const updatedHiddenArticles = hiddenArticles.filter(id => id !== articleId);
                             setHiddenArticles(updatedHiddenArticles);
                             localStorage.setItem('hiddenArticles', JSON.stringify(updatedHiddenArticles));
+                        }}
+                        onUnblockPublisher={(publisherId) => {
+                            const updatedBlockedPublishers = blockedPublishers.filter(id => id !== publisherId);
+                            setBlockedPublishers(updatedBlockedPublishers);
+                            localStorage.setItem('blockedPublishers', JSON.stringify(updatedBlockedPublishers));
                         }}
                     />
 
@@ -477,6 +472,7 @@ export default function StudentDashboard() {
                             p: 3,
                             backgroundColor: 'background.default',
                             marginLeft: sidebarCollapsed ? '60px' : '280px',  // Account for fixed sidebar
+                            marginTop: '64px',  // Account for fixed header
                             transition: 'margin-left 0.3s ease',  // Smooth transition when sidebar toggles
                         }}
                     >
