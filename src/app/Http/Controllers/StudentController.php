@@ -100,6 +100,42 @@ class StudentController extends Controller
     }
 
     /**
+     * API: Store a newly created comment via AJAX.
+     */
+    public function apiComment(Request $request, Article $article): \Illuminate\Http\JsonResponse
+    {
+        // Only allow commenting on published articles
+        if (!$article->isPublished()) {
+            return response()->json(['success' => false, 'message' => 'Article not found.'], 404);
+        }
+
+        $this->authorize('comment', $article);
+
+        $validated = $request->validate([
+            'content' => 'required|string|max:1000',
+        ]);
+
+        $comment = Comment::create([
+            'content' => $validated['content'],
+            'article_id' => $article->id,
+            'student_id' => Auth::id(),
+        ]);
+
+        $comment->load('student');
+
+        return response()->json([
+            'success' => true,
+            'comment' => [
+                'id' => $comment->id,
+                'text' => $comment->content,
+                'author' => $comment->student?->name ?? 'Unknown',
+                'timestamp' => $comment->created_at->toISOString(),
+                'date' => $comment->created_at->format('M d, Y')
+            ]
+        ]);
+    }
+
+    /**
      * Display user's comments across all articles.
      */
     public function myComments(): InertiaResponse

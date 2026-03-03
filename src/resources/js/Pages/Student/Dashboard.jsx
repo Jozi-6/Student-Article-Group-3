@@ -38,7 +38,9 @@ import {
     MoreVert,
     AutoStories,
     Person,
-    ExitToApp
+    ExitToApp,
+    VisibilityOff,
+    Block
 } from '@mui/icons-material';
 import { router } from '@inertiajs/react';
 import DashboardSidebar from '../../Components/DashboardSidebar';
@@ -60,10 +62,30 @@ export default function StudentDashboard() {
     const [selectedArticle, setSelectedArticle] = useState(null);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [profileMenuAnchor, setProfileMenuAnchor] = useState(null);
+    const [hiddenArticles, setHiddenArticles] = useState([]);
+    const [blockedPublishers, setBlockedPublishers] = useState([]);
+    const [articleMenuAnchor, setArticleMenuAnchor] = useState(null);
+    const [selectedArticleForMenu, setSelectedArticleForMenu] = useState(null);
 
     useEffect(() => {
         try {
             setLoading(true);
+            
+            // Load persisted data from localStorage
+            const savedLikedArticles = localStorage.getItem('likedArticles');
+            const savedHiddenArticles = localStorage.getItem('hiddenArticles');
+            const savedBlockedPublishers = localStorage.getItem('blockedPublishers');
+            
+            if (savedLikedArticles) {
+                setLikedArticles(JSON.parse(savedLikedArticles));
+            }
+            if (savedHiddenArticles) {
+                setHiddenArticles(JSON.parse(savedHiddenArticles));
+            }
+            if (savedBlockedPublishers) {
+                setBlockedPublishers(JSON.parse(savedBlockedPublishers));
+            }
+            
             const mockArticles = [
             {
                 id: 1,
@@ -170,7 +192,13 @@ export default function StudentDashboard() {
     };
 
     const toggleSidebar = () => {
-        setSidebarCollapsed(!sidebarCollapsed);
+        if (isMobile) {
+            // On mobile, toggle the sidebar open/closed
+            setSidebarOpen(!sidebarOpen);
+        } else {
+            // On desktop, toggle the sidebar collapsed state
+            setSidebarCollapsed(!sidebarCollapsed);
+        }
     };
 
     const handleProfileMenuOpen = (event) => {
@@ -191,11 +219,92 @@ export default function StudentDashboard() {
         router.post('/logout');
     };
 
+    // Article menu handlers
+    const handleArticleMenuOpen = (event, article) => {
+        setArticleMenuAnchor(event.currentTarget);
+        setSelectedArticleForMenu(article);
+    };
+
+    const handleArticleMenuClose = () => {
+        setArticleMenuAnchor(null);
+        setSelectedArticleForMenu(null);
+    };
+
+    const handleHideArticle = () => {
+        if (selectedArticleForMenu) {
+            const updatedHiddenArticles = [...hiddenArticles, selectedArticleForMenu.id];
+            setHiddenArticles(updatedHiddenArticles);
+            localStorage.setItem('hiddenArticles', JSON.stringify(updatedHiddenArticles));
+        }
+        handleArticleMenuClose();
+    };
+
+    const handleBlockPublisher = () => {
+        if (selectedArticleForMenu) {
+            const updatedBlockedPublishers = [...blockedPublishers, selectedArticleForMenu.writer.id];
+            setBlockedPublishers(updatedBlockedPublishers);
+            localStorage.setItem('blockedPublishers', JSON.stringify(updatedBlockedPublishers));
+        }
+        handleArticleMenuClose();
+    };
+
+    const handleLikeArticle = (articleId) => {
+        const isLiked = likedArticles.includes(articleId);
+        let updatedLikedArticles;
+        
+        if (isLiked) {
+            // Unlike
+            updatedLikedArticles = likedArticles.filter(id => id !== articleId);
+        } else {
+            // Like
+            updatedLikedArticles = [...likedArticles, articleId];
+        }
+        
+        setLikedArticles(updatedLikedArticles);
+        localStorage.setItem('likedArticles', JSON.stringify(updatedLikedArticles));
+        
+        // Update the article's like count in the articles array
+        setArticles(prevArticles => 
+            prevArticles.map(article => {
+                if (article.id === articleId) {
+                    return {
+                        ...article,
+                        likes: isLiked ? article.likes - 1 : article.likes + 1
+                    };
+                }
+                return article;
+            })
+        );
+    };
+
+    // Handle new comment for real-time updates
+    const handleNewComment = (newComment) => {
+        // Update the article's comment count in the articles array
+        setArticles(prevArticles => 
+            prevArticles.map(article => {
+                if (article.id === selectedArticle?.id) {
+                    return {
+                        ...article,
+                        comments_count: article.comments_count + 1
+                    };
+                }
+                return article;
+            })
+        );
+
+        // Update total comments count
+        setTotalComments(prev => prev + 1);
+    };
+
     const filteredArticles = articles.filter(article => {
         const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                article.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                article.writer.name.toLowerCase().includes(searchTerm.toLowerCase());
-        return matchesSearch;
+        
+        const isHidden = hiddenArticles.includes(article.id);
+        const isBlocked = blockedPublishers.includes(article.writer.id);
+        
+        return matchesSearch && !isHidden && !isBlocked;
     });
 
     const stats = {
@@ -279,14 +388,17 @@ export default function StudentDashboard() {
                 <AppBar position="static" sx={{ 
                     zIndex: (theme) => theme.zIndex.drawer + 1,
                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
                 }}>
-                    <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Toolbar>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <IconButton
-                                color="inherit"
-                                onClick={() => setSidebarOpen(!sidebarOpen)}
-                                sx={{ mr: 2 }}
+                                onClick={toggleSidebar}
+                                sx={{ 
+                                    color: 'white',
+                                    '&:hover': {
+                                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                    }
+                                }}
                             >
                                 <MenuIcon />
                             </IconButton>
@@ -347,6 +459,14 @@ export default function StudentDashboard() {
                         collapsed={sidebarCollapsed}
                         onClose={() => setSidebarOpen(false)}
                         title="Menu"
+                        onToggle={toggleSidebar}
+                        hiddenArticles={hiddenArticles}
+                        articles={articles}
+                        onUnhideArticle={(articleId) => {
+                            const updatedHiddenArticles = hiddenArticles.filter(id => id !== articleId);
+                            setHiddenArticles(updatedHiddenArticles);
+                            localStorage.setItem('hiddenArticles', JSON.stringify(updatedHiddenArticles));
+                        }}
                     />
 
                     {/* Main Content */}
@@ -356,9 +476,8 @@ export default function StudentDashboard() {
                             flex: 1,
                             p: 3,
                             backgroundColor: 'background.default',
-                            overflow: 'auto',
-                            display: 'flex',
-                            flexDirection: 'column'
+                            marginLeft: sidebarCollapsed ? '60px' : '280px',  // Account for fixed sidebar
+                            transition: 'margin-left 0.3s ease',  // Smooth transition when sidebar toggles
                         }}
                     >
                         <Container maxWidth="md" sx={{ flex: 1 }}>
@@ -413,11 +532,6 @@ export default function StudentDashboard() {
                                     size="small"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    InputProps={{
-                                        startAdornment: (
-                                            <Search sx={{ mr: 1, color: 'text.secondary' }} />
-                                        ),
-                                    }}
                                 />
                             </Paper>
 
@@ -434,7 +548,7 @@ export default function StudentDashboard() {
                                                 title={article.writer.name}
                                                 subheader={new Date(article.created_at).toLocaleDateString()}
                                                 action={
-                                                    <IconButton>
+                                                    <IconButton onClick={(e) => handleArticleMenuOpen(e, article)}>
                                                         <MoreVert />
                                                     </IconButton>
                                                 }
@@ -464,10 +578,10 @@ export default function StudentDashboard() {
                                                     <Button
                                                         size="small"
                                                         startIcon={likedArticles.includes(article.id) ? <Favorite /> : <FavoriteBorder />}
-                                                        onClick={() => toggleLike(article.id)}
+                                                        onClick={() => handleLikeArticle(article.id)}
                                                         color={likedArticles.includes(article.id) ? 'error' : 'inherit'}
                                                     >
-                                                        Like
+                                                        {article.likes} {likedArticles.includes(article.id) ? 'Liked' : 'Like'}
                                                     </Button>
                                                     <Button size="small" startIcon={<CommentIcon />} onClick={() => handleCommentsClick(article)}>
                                                         Comments
@@ -486,6 +600,21 @@ export default function StudentDashboard() {
                                                     onCommentsChange={(count) => {
                                                         // Update total comments count
                                                         setTotalComments(prev => prev + count);
+                                                    }}
+                                                    onNewComment={(newComment) => {
+                                                        // Update the article's comment count in real-time
+                                                        setArticles(prevArticles => 
+                                                            prevArticles.map(a => {
+                                                                if (a.id === article.id) {
+                                                                    return {
+                                                                        ...a,
+                                                                        comments_count: a.comments_count + 1
+                                                                    };
+                                                                }
+                                                                return a;
+                                                            })
+                                                        );
+                                                        setTotalComments(prev => prev + 1);
                                                     }}
                                                 />
                                             </CardContent>
@@ -577,11 +706,45 @@ export default function StudentDashboard() {
                                     currentUser="You"
                                     placeholder="Add a comment..."
                                     showAvatar={true}
+                                    isOpen={commentsModalOpen}
+                                    onCommentsChange={(count) => {
+                                        // Update total comments count when comments change
+                                        setTotalComments(prev => prev + (count - (selectedArticle.comments?.length || 0)));
+                                    }}
+                                    onNewComment={handleNewComment}
                                 />
                             )}
                         </Box>
                     </Box>
                 </Modal>
+
+                {/* Article Menu */}
+                <Menu
+                    anchorEl={articleMenuAnchor}
+                    open={Boolean(articleMenuAnchor)}
+                    onClose={handleArticleMenuClose}
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'right',
+                    }}
+                    transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                    }}
+                >
+                    <MenuItem onClick={handleHideArticle}>
+                        <ListItemIcon>
+                            <VisibilityOff fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Hide Article</ListItemText>
+                    </MenuItem>
+                    <MenuItem onClick={handleBlockPublisher}>
+                        <ListItemIcon>
+                            <Block fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Block Publisher</ListItemText>
+                    </MenuItem>
+                </Menu>
             </Box>
         </>
     );

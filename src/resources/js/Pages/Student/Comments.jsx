@@ -9,16 +9,20 @@ import {
     Avatar,
     CircularProgress,
     Alert,
-    Snackbar
+    Snackbar,
+    IconButton,
+    Menu,
+    MenuItem
 } from '@mui/material';
-import { Send } from '@mui/icons-material';
+import { Send, Edit, Delete, MoreVert } from '@mui/icons-material';
 
 export default function Comments({ 
     articleId,
     currentUser = 'You',
     placeholder = "Add a comment...",
     showAvatar = true,
-    onCommentsChange // Callback to notify parent of comment count changes
+    onCommentsChange, // Callback to notify parent of comment count changes
+    onNewComment // Callback to notify parent of new comment for real-time updates
 }) {
     const [comments, setComments] = useState([]);
     const [commentText, setCommentText] = useState('');
@@ -26,10 +30,40 @@ export default function Comments({
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState(null);
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+    const [editingComment, setEditingComment] = useState(null);
+    const [editText, setEditText] = useState('');
+    const [commentMenuAnchor, setCommentMenuAnchor] = useState(null);
+    const [selectedCommentForMenu, setSelectedCommentForMenu] = useState(null);
 
     // Load comments from localStorage on component mount
     useEffect(() => {
         loadComments();
+    }, [articleId]);
+
+    // Listen for storage changes to sync comments across components
+    useEffect(() => {
+        const handleStorageChange = (e) => {
+            if (e.key === `article_comments_${articleId}` && e.newValue) {
+                // Reload comments when they're updated from another component
+                loadComments();
+            }
+        };
+
+        // Listen for custom comment update events within the same page
+        const handleCommentUpdate = (e) => {
+            if (e.detail && e.detail.articleId === articleId) {
+                // Reload comments when a new comment is added to this article
+                loadComments();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('commentUpdated', handleCommentUpdate);
+        
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('commentUpdated', handleCommentUpdate);
+        };
     }, [articleId]);
 
     // Save comments to localStorage whenever they change
@@ -101,6 +135,16 @@ export default function Comments({
             const storageKey = `article_comments_${articleId}`;
             localStorage.setItem(storageKey, JSON.stringify(updatedComments));
             
+            // Notify parent of new comment for real-time updates
+            if (onNewComment) {
+                onNewComment(newComment);
+            }
+            
+            // Dispatch custom event to notify other Comments components of the update
+            window.dispatchEvent(new CustomEvent('commentUpdated', {
+                detail: { articleId, newComment }
+            }));
+            
             showSnackbar('Comment posted successfully!', 'success');
             
         } catch (err) {
@@ -125,6 +169,97 @@ export default function Comments({
 
     const handleCloseSnackbar = () => {
         setSnackbar(prev => ({ ...prev, open: false }));
+    };
+
+    // Comment menu handlers
+    const handleCommentMenuOpen = (event, comment) => {
+        setCommentMenuAnchor(event.currentTarget);
+        setSelectedCommentForMenu(comment);
+    };
+
+    const handleCommentMenuClose = () => {
+        setCommentMenuAnchor(null);
+        setSelectedCommentForMenu(null);
+    };
+
+    const handleEditComment = () => {
+        if (selectedCommentForMenu) {
+            setEditingComment(selectedCommentForMenu.id);
+            setEditText(selectedCommentForMenu.text);
+        }
+        handleCommentMenuClose();
+    };
+
+    const handleDeleteComment = () => {
+        if (selectedCommentForMenu) {
+            try {
+                const updatedComments = comments.filter(comment => comment.id !== selectedCommentForMenu.id);
+                setComments(updatedComments);
+                
+                // Save to localStorage immediately
+                const storageKey = `article_comments_${articleId}`;
+                localStorage.setItem(storageKey, JSON.stringify(updatedComments));
+                
+                // Notify parent of comment count change
+                if (onCommentsChange) {
+                    onCommentsChange(updatedComments.length);
+                }
+                
+                // Dispatch custom event to notify other Comments components
+                window.dispatchEvent(new CustomEvent('commentUpdated', {
+                    detail: { articleId, deletedComment: selectedCommentForMenu }
+                }));
+                
+                showSnackbar('Comment deleted successfully!', 'success');
+            } catch (err) {
+                console.error('Error deleting comment:', err);
+                setError('Failed to delete comment. Please try again.');
+                showSnackbar('Failed to delete comment', 'error');
+            }
+        }
+        handleCommentMenuClose();
+    };
+
+    const handleSaveEdit = () => {
+        if (!editingComment || !editText.trim()) return;
+
+        try {
+            const updatedComments = comments.map(comment => {
+                if (comment.id === editingComment) {
+                    return {
+                        ...comment,
+                        text: editText.trim(),
+                        edited: true,
+                        editedAt: new Date().toISOString()
+                    };
+                }
+                return comment;
+            });
+            
+            setComments(updatedComments);
+            setEditingComment(null);
+            setEditText('');
+            
+            // Save to localStorage immediately
+            const storageKey = `article_comments_${articleId}`;
+            localStorage.setItem(storageKey, JSON.stringify(updatedComments));
+            
+            // Dispatch custom event to notify other Comments components
+            window.dispatchEvent(new CustomEvent('commentUpdated', {
+                detail: { articleId, editedComment: { id: editingComment, text: editText.trim() } }
+            }));
+            
+            showSnackbar('Comment updated successfully!', 'success');
+        } catch (err) {
+            console.error('Error updating comment:', err);
+            setError('Failed to update comment. Please try again.');
+            showSnackbar('Failed to update comment', 'error');
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setEditingComment(null);
+        setEditText('');
     };
 
     return (
@@ -172,14 +307,85 @@ export default function Comments({
                                                     <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
                                                         {comment.author}
                                                     </Typography>
+                                                    {comment.edited && (
+                                                        <Typography variant="caption" color="text.secondary" sx={{ ml: 1 }}>
+                                                            (edited)
+                                                        </Typography>
+                                                    )}
                                                 </Box>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {comment.date}
-                                                </Typography>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {comment.date}
+                                                    </Typography>
+                                                    {comment.author === currentUser && (
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={(e) => handleCommentMenuOpen(e, comment)}
+                                                            sx={{ 
+                                                                p: 0.5,
+                                                                '&:hover': {
+                                                                    backgroundColor: 'action.hover'
+                                                                }
+                                                            }}
+                                                        >
+                                                            <MoreVert fontSize="small" />
+                                                        </IconButton>
+                                                    )}
+                                                </Box>
                                             </Box>
-                                            <Typography variant="body2" color="text.secondary" sx={{ ml: showAvatar ? 3.5 : 0 }}>
-                                                {comment.text}
-                                            </Typography>
+                                            <Box sx={{ ml: showAvatar ? 3.5 : 0 }}>
+                                                {editingComment === comment.id ? (
+                                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                                        <TextField
+                                                            fullWidth
+                                                            size="small"
+                                                            multiline
+                                                            rows={2}
+                                                            value={editText}
+                                                            onChange={(e) => setEditText(e.target.value)}
+                                                            onKeyPress={(e) => {
+                                                                if (e.key === 'Enter' && e.ctrlKey) {
+                                                                    e.preventDefault();
+                                                                    handleSaveEdit();
+                                                                }
+                                                            }}
+                                                            sx={{
+                                                                '& .MuiOutlinedInput-notchedOutline': {
+                                                                    border: 'none',
+                                                                },
+                                                                '& .MuiOutlinedInput-root': {
+                                                                    '&.Mui-focused fieldset': {
+                                                                        border: 'none',
+                                                                    },
+                                                                    '&:hover fieldset': {
+                                                                        border: 'none',
+                                                                    },
+                                                                    fieldset: {
+                                                                        border: 'none',
+                                                                    },
+                                                                },
+                                                            }}
+                                                        />
+                                                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                                            <Button size="small" onClick={handleCancelEdit}>
+                                                                Cancel
+                                                            </Button>
+                                                            <Button 
+                                                                size="small" 
+                                                                variant="contained" 
+                                                                onClick={handleSaveEdit}
+                                                                disabled={!editText.trim()}
+                                                            >
+                                                                Save
+                                                            </Button>
+                                                        </Box>
+                                                    </Box>
+                                                ) : (
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {comment.text}
+                                                    </Typography>
+                                                )}
+                                            </Box>
                                         </Box>
                                     </ListItem>
                                 ))
@@ -218,7 +424,22 @@ export default function Comments({
                             multiline
                             rows={2}
                             disabled={submitting}
-                            
+                            sx={{
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                    border: 'none',
+                                },
+                                '& .MuiOutlinedInput-root': {
+                                    '&.Mui-focused fieldset': {
+                                        border: 'none',
+                                    },
+                                    '&:hover fieldset': {
+                                        border: 'none',
+                                    },
+                                    fieldset: {
+                                        border: 'none',
+                                    },
+                                },
+                            }}
                         />
                         <Button
                             variant="contained"
@@ -237,6 +458,30 @@ export default function Comments({
                     </Box>
                 </Box>
             </Box>
+
+            {/* Comment Menu */}
+            <Menu
+                anchorEl={commentMenuAnchor}
+                open={Boolean(commentMenuAnchor)}
+                onClose={handleCommentMenuClose}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+            >
+                <MenuItem onClick={handleEditComment}>
+                    <Edit fontSize="small" sx={{ mr: 1 }} />
+                    Edit
+                </MenuItem>
+                <MenuItem onClick={handleDeleteComment} sx={{ color: 'error.main' }}>
+                    <Delete fontSize="small" sx={{ mr: 1 }} />
+                    Delete
+                </MenuItem>
+            </Menu>
 
             {/* Success/Error Snackbar */}
             <Snackbar

@@ -72,39 +72,18 @@ Route::middleware('auth')->group(function () {
             ->map(function ($comment) {
                 return [
                     'id' => $comment->id,
-                    'content' => $comment->content,
-                    'student' => [
-                        'name' => $comment->student?->name
-                    ],
-                    'created_at' => $comment->created_at
+                    'text' => $comment->content,
+                    'author' => $comment->student?->name ?? 'Unknown',
+                    'timestamp' => $comment->created_at->toISOString(),
+                    'date' => $comment->created_at->format('M d, Y')
                 ];
             });
         
-        return response()->json($comments);
+        return response()->json(['comments' => $comments]);
     });
 
-    Route::post('/api/articles/{article}/comments', function ($article) {
-        $validated = request()->validate([
-            'content' => 'required|string|max:1000'
-        ]);
-
-        $comment = \App\Models\Comment::create([
-            'content' => $validated['content'],
-            'article_id' => $article,
-            'student_id' => auth()->id()
-        ]);
-
-        $comment->load('student');
-
-        return response()->json([
-            'id' => $comment->id,
-            'content' => $comment->content,
-            'student' => [
-                'name' => $comment->student?->name
-            ],
-            'created_at' => $comment->created_at
-        ]);
-    });
+    // Use the new API comment method
+    Route::post('/student/articles/{article}/comment', [StudentController::class, 'apiComment']);
 });
 
 // Profile routes
