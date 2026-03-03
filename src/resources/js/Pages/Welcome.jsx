@@ -91,10 +91,18 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                         </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 2 }}>
-                        {auth.user ? (
+                        <>
                             <Button
                                 component={Link}
-                                href={route('dashboard')}
+                                href={route('login')}
+                                variant="outlined"
+                                sx={{ color: 'white', borderColor: 'white' }}
+                            >
+                                Login
+                            </Button>
+                            <Button
+                                component={Link}
+                                href={route('register')}
                                 variant="contained"
                                 sx={{
                                     backgroundColor: 'white',
@@ -104,34 +112,9 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                     }
                                 }}
                             >
-                                Dashboard
+                                Register
                             </Button>
-                        ) : (
-                            <>
-                                <Button
-                                    component={Link}
-                                    href={route('login')}
-                                    variant="outlined"
-                                    sx={{ color: 'white', borderColor: 'white' }}
-                                >
-                                    Login
-                                </Button>
-                                <Button
-                                    component={Link}
-                                    href={route('register')}
-                                    variant="contained"
-                                    sx={{
-                                        backgroundColor: 'white',
-                                        color: 'primary.main',
-                                        '&:hover': {
-                                            backgroundColor: 'grey.100',
-                                        }
-                                    }}
-                                >
-                                    Register
-                                </Button>
-                            </>
-                        )}
+                        </>
                     </Box>
                 </Toolbar>
             </AppBar>
@@ -276,7 +259,7 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                                         fontSize: { xs: '2rem', md: '2.5rem' }
                                     }}
                                 >
-                                    Login As
+                                    Be one of us!
                                 </Typography>
                             </Box>
                         </Slide>

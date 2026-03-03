@@ -112,19 +112,6 @@ export default function Login({ status, canResetPassword }) {
                             error={!!errors.password}
                             helperText={errors.password}
                             
-                            InputProps={{
-                                endAdornment: (
-                                    <Button
-                                        aria-label="toggle password visibility"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        edge="end"
-                                        size="small"
-                                        sx={{ borderRadius: 1 }}
-                                    >
-                                        {showPassword ? <VisibilityOff /> : <Visibility />}
-                                    </Button>
-                                ),
-                            }}
                         />
 
                         <Box sx={{ display: 'flex', alignItems: 'center', mt: 2, mb: 3 }}>

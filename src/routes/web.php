@@ -43,23 +43,23 @@ Route::get('/api/latest-articles', function () {
 
 Route::get('/student/dashboard', function () {
     return Inertia::render('Student/Dashboard');
-})->middleware(['auth', 'verified'])->name('student.dashboard');
+})->middleware(['auth', 'verified', 'role:student'])->name('student.dashboard');
 
 Route::get('/student/my-comments', [StudentController::class, 'myComments'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'role:student'])
     ->name('student.my.comments');
 
 Route::get('/student/articles/{article}', [StudentController::class, 'show'])
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'role:student'])
     ->name('student.articles.show');
 
 Route::get('/writer/dashboard', function () {
     return Inertia::render('Writer/Dashboard');
-})->middleware(['auth', 'verified'])->name('writer.dashboard');
+})->middleware(['auth', 'verified', 'role:writer'])->name('writer.dashboard');
 
 Route::get('/editor/dashboard', function () {
     return Inertia::render('Editor/Dashboard');
-})->middleware(['auth', 'verified'])->name('editor.dashboard');
+})->middleware(['auth', 'verified', 'role:editor'])->name('editor.dashboard');
 
 // API routes for articles and comments
 Route::middleware('auth')->group(function () {

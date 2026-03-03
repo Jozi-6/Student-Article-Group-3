@@ -145,11 +145,7 @@ export default function Register() {
                                         error={!!errors.name}
                                         helperText={errors.name}
                                         
-                                        InputProps={{
-                                            startAdornment: (
-                                                <Person sx={{ mr: 1, color: 'primary.main' }} />
-                                            ),
-                                        }}
+                            
                                     />
                                     
                                     <TextField
@@ -165,11 +161,6 @@ export default function Register() {
                                         error={!!errors.email}
                                         helperText={errors.email}
                                         
-                                        InputProps={{
-                                            startAdornment: (
-                                                <Email sx={{ mr: 1, color: 'primary.main' }} />
-                                            ),
-                                        }}
                                     />
                                     
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
@@ -211,22 +202,6 @@ export default function Register() {
                                         error={!!errors.password}
                                         helperText={errors.password}
                                         
-                                        InputProps={{
-                                            startAdornment: (
-                                                <Lock sx={{ mr: 1, color: 'primary.main' }} />
-                                            ),
-                                            endAdornment: (
-                                                <Button
-                                                    aria-label="toggle password visibility"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    edge="end"
-                                                    size="small"
-                                                    sx={{ borderRadius: 1 }}
-                                                >
-                                                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                                                </Button>
-                                            ),
-                                        }}
                                     />
                                     
                                     <TextField
@@ -242,11 +217,6 @@ export default function Register() {
                                         error={!!errors.password_confirmation}
                                         helperText={errors.password_confirmation}
                                         
-                                        InputProps={{
-                                            startAdornment: (
-                                                <Lock sx={{ mr: 1, color: 'primary.main' }} />
-                                            ),
-                                        }}
                                     />
 
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3, mb: 2 }}>
