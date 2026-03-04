@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Head } from '@inertiajs/react';
 import {
     Box,
-    Container,
     Card,
     CardContent,
     CardHeader,
@@ -476,7 +475,12 @@ export default function StudentDashboard() {
                             transition: 'margin-left 0.3s ease',  // Smooth transition when sidebar toggles
                         }}
                     >
-                        <Container maxWidth="md" sx={{ flex: 1 }}>
+                        <Box sx={{ 
+                            flex: 1, // Take remaining space
+                            px: 3, // Internal padding instead of Container
+                            display: 'flex',
+                            flexDirection: 'column'
+                        }}>
                             {/* Stats Cards */}
                             <Grid container spacing={2} sx={{ mb: 4 }}>
                                 <Grid item xs={12} sm={4}>
@@ -649,7 +653,7 @@ export default function StudentDashboard() {
                                     </Card>
                                 )}
                             </Box>
-                        </Container>
+                        </Box>
                     </Box>
                 </Box>
 
