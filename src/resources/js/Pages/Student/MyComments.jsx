@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
 import {
     Box,
-    Container,
     Card,
     CardContent,
     CardHeader,
@@ -166,7 +165,12 @@ export default function MyComments() {
                 backgroundColor: 'background.default',
                 py: 3 
             }}>
-                <Container maxWidth="lg">
+                <Box sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    flex: 1, // Take remaining space
+                    px: 3 // Internal padding instead of Container
+                }}>
                     {/* Header */}
                     <Box sx={{ 
                         display: 'flex', 
@@ -183,6 +187,7 @@ export default function MyComments() {
                         <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
                             💬 My Comments
                         </Typography>
+                    </Box>
                     </Box>
 
                     {/* Comments List */}
@@ -378,8 +383,7 @@ export default function MyComments() {
                             </CardContent>
                         </Card>
                     )}
-                </Container>
-            </Box>
+                </Box>
         </>
     );
 }
