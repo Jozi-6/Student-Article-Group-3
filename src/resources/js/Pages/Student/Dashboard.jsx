@@ -542,7 +542,30 @@ export default function StudentDashboard() {
                                                     {article.writer.name.charAt(0)}
                                                 </Avatar>}
                                                 title={article.writer.name}
-                                                subheader={new Date(article.created_at).toLocaleDateString()}
+                                                subheader={
+                                                    <Typography 
+                                                        variant="caption" 
+                                                        sx={{ 
+                                                            fontWeight: 'medium',
+                                                            color: 'primary.main',
+                                                            backgroundColor: 'primary.50',
+                                                            px: 1,
+                                                            py: 0.5,
+                                                            borderRadius: 1,
+                                                            display: 'inline-block'
+                                                        }}
+                                                    >
+                                                        {new Date(article.created_at).toLocaleDateString('en-US', {
+                                                            month: 'numeric',
+                                                            day: 'numeric', 
+                                                            year: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                            second: '2-digit',
+                                                            hour12: false
+                                                        }).replace(',', '')}
+                                                    </Typography>
+                                                }
                                                 action={
                                                     <IconButton onClick={(e) => handleArticleMenuOpen(e, article)}>
                                                         <MoreVert />

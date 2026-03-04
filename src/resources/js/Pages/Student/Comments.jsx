@@ -140,13 +140,22 @@ export default function Comments({
             setSubmitting(true);
             setError(null);
 
-            // Create new comment with unique ID and timestamp
+            // Create new comment with unique ID and enhanced timestamp
+            const now = new Date();
             const newComment = {
                 id: Date.now(), // Unique ID using timestamp
                 text: commentText.trim(),
                 author: currentUser,
-                timestamp: new Date().toISOString(),
-                date: new Date().toLocaleDateString(),
+                timestamp: now.toISOString(),
+                date: now.toLocaleDateString('en-US', {
+                    month: 'numeric',
+                    day: 'numeric', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                }).replace(',', ''),
                 replies: [] // Initialize with empty replies array
             };
 

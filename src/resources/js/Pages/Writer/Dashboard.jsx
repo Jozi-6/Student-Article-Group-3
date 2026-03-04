@@ -30,7 +30,12 @@ import {
     AppBar,
     Toolbar,
     useMediaQuery,
-    useTheme
+    useTheme,
+    Select,
+    FormControl,
+    InputLabel,
+    Snackbar,
+    Alert
 } from '@mui/material';
 import {
     Add,
@@ -47,7 +52,10 @@ import {
     Menu as MenuIcon,
     CreateNewFolder,
     CheckCircle,
-    AutoStories
+    AutoStories,
+    AccountCircle,
+    Dashboard as DashboardIcon,
+    Description
 } from '@mui/icons-material';
 import { router } from '@inertiajs/react';
 import DashboardSidebar from '@/Components/DashboardSidebar';
@@ -76,6 +84,14 @@ export default function WriterDashboard({
     const [selectedArticle, setSelectedArticle] = useState(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+    
+    // New Article Form state
+    const [newArticle, setNewArticle] = useState({
+        title: '',
+        content: '',
+        category: ''
+    });
+    const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
 
     useEffect(() => {
         // Update articles when props change
@@ -149,6 +165,28 @@ export default function WriterDashboard({
         setSelectedArticle(null);
     };
 
+    const handleNewArticleChange = (field) => (event) => {
+        setNewArticle(prev => ({
+            ...prev,
+            [field]: event.target.value
+        }));
+    };
+
+    const handleNewArticleSubmit = (e) => {
+        e.preventDefault();
+        // Here you would normally submit to backend
+        setNotification({
+            open: true,
+            message: 'Article created successfully!',
+            severity: 'success'
+        });
+        setNewArticle({ title: '', content: '', category: '' });
+    };
+
+    const handleNotificationClose = () => {
+        setNotification(prev => ({ ...prev, open: false }));
+    };
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'draft': return 'default';
@@ -186,6 +224,12 @@ export default function WriterDashboard({
 
     const sidebarMenuItems = [
         {
+            label: 'Dashboard',
+            icon: <DashboardIcon />,
+            href: '/writer/dashboard',
+            active: true
+        },
+        {
             label: 'Create Article',
             icon: <CreateNewFolder />,
             href: '/writer/articles/create',
@@ -198,7 +242,7 @@ export default function WriterDashboard({
             active: filter === 'draft'
         },
         {
-            label: `Submitted (${stats.submitted})`,
+            label: `Submitted Articles (${stats.submitted})`,
             icon: <Send />,
             href: '#submitted',
             active: filter === 'submitted'
@@ -230,46 +274,33 @@ export default function WriterDashboard({
                 }}>
                     <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                            {isMobile && (
-                                <IconButton
-                                    color="inherit"
-                                    edge="start"
-                                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                                    sx={{ mr: 2 }}
-                                >
-                                    <MenuIcon />
-                                </IconButton>
-                            )}
+                            <IconButton
+                                color="inherit"
+                                edge="start"
+                                onClick={() => setSidebarOpen(!sidebarOpen)}
+                                sx={{ mr: 2 }}
+                            >
+                                <MenuIcon />
+                            </IconButton>
                             <AutoStories sx={{ fontSize: 32, color: 'white' }} />
                             <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'white' }}>
                                 ✍️ Writer Dashboard
                             </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', gap: 2 }}>
-                            <Button
-                                component={Link}
-                                href="/"
-                                variant="outlined"
-                                size="small"
-                                sx={{ color: 'white', borderColor: 'white' }}
-                            >
-                                Home
-                            </Button>
-                            <Button
+                            <IconButton
                                 component={Link}
                                 href="/profile"
-                                variant="contained"
-                                size="small"
                                 sx={{
-                                    backgroundColor: 'white',
-                                    color: 'primary.main',
+                                    color: 'white',
+                                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
                                     '&:hover': {
-                                        backgroundColor: 'grey.100',
+                                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
                                     }
                                 }}
                             >
-                                Profile
-                            </Button>
+                                <AccountCircle />
+                            </IconButton>
                         </Box>
                     </Toolbar>
                 </AppBar>
@@ -279,7 +310,7 @@ export default function WriterDashboard({
                     menuItems={sidebarMenuItems}
                     open={sidebarOpen}
                     onClose={() => setSidebarOpen(false)}
-                    title="My Articles"
+                    title="Dashboard"
                 />
 
                 {/* Main Content */}
@@ -289,8 +320,12 @@ export default function WriterDashboard({
                         flexGrow: 1,
                         p: 3,
                         pt: 10,
+                        pl: sidebarOpen && !isMobile ? 0 : 3,
+                        ml: sidebarOpen && !isMobile ? '280px' : 0,
                         backgroundColor: 'background.default',
-                        overflow: 'auto'
+                        overflow: 'auto',
+                        transition: 'margin-left 0.3s ease, padding-left 0.3s ease',
+                        minHeight: '100vh'
                     }}
                 >
                     <Container maxWidth="lg">
@@ -394,6 +429,100 @@ export default function WriterDashboard({
                             </Grid>
                         </Grid>
 
+                        {/* New Article Form */}
+                        <Card sx={{ 
+                            mb: 4,
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            backdropFilter: 'blur(10px)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                            boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                            transition: 'all 0.3s ease',
+                            '&:hover': { 
+                                boxShadow: '0 15px 50px rgba(0,0,0,0.12)'
+                            }
+                        }}>
+                            <CardContent sx={{ p: 4 }}>
+                                <Typography variant="h5" sx={{ mb: 3, fontWeight: 'bold', color: 'primary.main' }}>
+                                    ✍️ Create New Article
+                                </Typography>
+                                <Box component="form" onSubmit={handleNewArticleSubmit}>
+                                    <Grid container spacing={3}>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                fullWidth
+                                                label="Article Title"
+                                                value={newArticle.title}
+                                                onChange={handleNewArticleChange('title')}
+                                                variant="outlined"
+                                                required
+                                                sx={{ 
+                                                    '& .MuiOutlinedInput-root': {
+                                                        borderRadius: 2
+                                                    }
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <TextField
+                                                fullWidth
+                                                label="Content"
+                                                value={newArticle.content}
+                                                onChange={handleNewArticleChange('content')}
+                                                multiline
+                                                rows={6}
+                                                variant="outlined"
+                                                required
+                                                sx={{ 
+                                                    '& .MuiOutlinedInput-root': {
+                                                        borderRadius: 2
+                                                    }
+                                                }}
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <FormControl fullWidth variant="outlined" required>
+                                                <InputLabel>Category</InputLabel>
+                                                <Select
+                                                    value={newArticle.category}
+                                                    onChange={handleNewArticleChange('category')}
+                                                    label="Category"
+                                                    sx={{ borderRadius: 2 }}
+                                                >
+                                                    <MenuItem value="technology">Technology</MenuItem>
+                                                    <MenuItem value="business">Business</MenuItem>
+                                                    <MenuItem value="lifestyle">Lifestyle</MenuItem>
+                                                    <MenuItem value="education">Education</MenuItem>
+                                                    <MenuItem value="entertainment">Entertainment</MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                        </Grid>
+                                        <Grid item xs={12} md={6}>
+                                            <Button
+                                                type="submit"
+                                                variant="contained"
+                                                size="large"
+                                                fullWidth
+                                                sx={{
+                                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                    '&:hover': {
+                                                        background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                                                        transform: 'translateY(-2px)',
+                                                        boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)'
+                                                    },
+                                                    transition: 'all 0.3s ease',
+                                                    borderRadius: 2,
+                                                    py: 1.5,
+                                                    fontWeight: 'bold'
+                                                }}
+                                            >
+                                                Submit Article
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </Box>
+                            </CardContent>
+                        </Card>
+
                         {/* Search and Filter */}
                         <Paper sx={{ 
                             p: 3, 
@@ -434,25 +563,6 @@ export default function WriterDashboard({
                                     <MenuItem value="needs_revision">Needs Revision</MenuItem>
                                     <MenuItem value="published">Published</MenuItem>
                                 </TextField>
-
-                                <Button
-                                    variant="contained"
-                                    startIcon={<Add />}
-                                    onClick={() => router.get('/writer/articles/create')}
-                                    sx={{
-                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                        '&:hover': {
-                                            background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
-                                            transform: 'translateY(-2px)',
-                                            boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)'
-                                        },
-                                        transition: 'all 0.3s ease',
-                                        borderRadius: 2,
-                                        px: 3
-                                    }}
-                                >
-                                    Create Article
-                                </Button>
                             </Box>
                         </Paper>
 
@@ -564,6 +674,55 @@ export default function WriterDashboard({
                         </Grid>
                     </Container>
                 </Box>
+
+                {/* Footer */}
+                <Box
+                    component="footer"
+                    sx={{
+                        backgroundColor: 'background.paper',
+                        borderTop: '1px solid',
+                        borderColor: 'divider',
+                        py: 2,
+                        px: 3,
+                        ml: sidebarOpen && !isMobile ? '280px' : 0,
+                        transition: 'margin-left 0.3s ease'
+                    }}
+                >
+                    <Container maxWidth="lg">
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <Typography variant="body2" color="text.secondary">
+                                © 2024 Writer Dashboard. All rights reserved.
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                <Typography variant="body2" color="text.secondary">
+                                    Status: Active
+                                </Typography>
+                                <Chip 
+                                    label="Connected" 
+                                    size="small" 
+                                    color="success" 
+                                    variant="outlined"
+                                />
+                            </Box>
+                        </Box>
+                    </Container>
+                </Box>
+
+                {/* Notification Snackbar */}
+                <Snackbar
+                    open={notification.open}
+                    autoHideDuration={6000}
+                    onClose={handleNotificationClose}
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                >
+                    <Alert 
+                        onClose={handleNotificationClose} 
+                        severity={notification.severity}
+                        sx={{ width: '100%' }}
+                    >
+                        {notification.message}
+                    </Alert>
+                </Snackbar>
 
                 {/* Article Menu */}
                 <Menu

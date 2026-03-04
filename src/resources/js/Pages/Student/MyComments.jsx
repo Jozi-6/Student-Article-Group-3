@@ -214,8 +214,27 @@ export default function MyComments() {
                                             subheader={
                                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
                                                     <Schedule sx={{ fontSize: 16 }} />
-                                                    <Typography variant="body2" color="text.secondary">
-                                                        {new Date(comment.timestamp).toLocaleDateString()} at {new Date(comment.timestamp).toLocaleTimeString()}
+                                                    <Typography 
+                                                        variant="body2" 
+                                                        sx={{ 
+                                                            fontWeight: 'medium',
+                                                            color: 'primary.main',
+                                                            backgroundColor: 'primary.50',
+                                                            px: 1,
+                                                            py: 0.5,
+                                                            borderRadius: 1,
+                                                            display: 'inline-block'
+                                                        }}
+                                                    >
+                                                        {new Date(comment.timestamp).toLocaleDateString('en-US', {
+                                                            month: 'numeric',
+                                                            day: 'numeric', 
+                                                            year: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit',
+                                                            second: '2-digit',
+                                                            hour12: false
+                                                        }).replace(',', '')}
                                                     </Typography>
                                                     <Chip 
                                                         label="Your Comment" 

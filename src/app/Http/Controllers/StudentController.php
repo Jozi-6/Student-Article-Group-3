@@ -147,7 +147,7 @@ class StudentController extends Controller
                     $statusQuery->where('name', 'Published');
                 });
             })
-            ->with(['article', 'article.status'])
+            ->with(['article', 'article.writer'])  // Load article and its writer (publisher)
             ->latest()
             ->get();
 
